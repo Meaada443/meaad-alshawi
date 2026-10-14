@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>إدارة المشاريع</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f2742">
@@ -67,6 +67,18 @@ header h1{margin:0;font-size:19px}.hb{display:flex;gap:8px;align-items:center}.r
 .modal .box{width:100%;max-width:440px;max-height:92vh;overflow:auto}
 .link{white-space:pre-wrap;background:#eff6ff;padding:10px;border-radius:10px;word-break:break-all;font-size:13px;direction:ltr;text-align:left}
 @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
+/* ===== توافق الجوال (آيفون وأندرويد) ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{-webkit-tap-highlight-color:transparent;padding-bottom:env(safe-area-inset-bottom);overflow-x:hidden}
+input,select,textarea{font-size:16px;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,#64748b 50%),linear-gradient(135deg,#64748b 50%,transparent 50%);background-position:16px 50%,22px 50%;background-size:6px 6px;background-repeat:no-repeat;padding-inline-start:36px}
+header{padding-top:max(14px,env(safe-area-inset-top));padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+.btn,.tab,.wa{min-height:44px;touch-action:manipulation}.sm{min-height:38px;touch-action:manipulation}
+.modal{padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+.modal .box{max-height:90vh;max-height:90dvh;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.tabs{-webkit-overflow-scrolling:touch;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.item img,.item video{max-width:100%}
+@media(max-width:600px){.wrap{padding:14px}.banner{height:200px}.img{height:150px}.top h2{font-size:19px}.det{grid-template-columns:repeat(2,1fr)}header h1{font-size:17px}.modal .box{padding:16px}}
 </style>
 </head>
 <body>
@@ -181,7 +193,7 @@ async function setTab(k){S.tab=k;await loadE();render()}
 function fileHtml(e){
   const u=S.urls[e.file_path];if(!u)return"";const t=e.file_type||"";
   if(t.startsWith("image"))return `<img src="${u}" loading="lazy" onclick="openImg(this.src)">`;
-  if(t.startsWith("video"))return `<video src="${u}" controls preload="metadata"></video>`;
+  if(t.startsWith("video"))return `<video src="${u}" controls playsinline preload="metadata"></video>`;
   return `<p><a href="${u}" target="_blank" rel="noopener">📎 فتح الملف</a></p>`;
 }
 function proj(){
@@ -194,7 +206,7 @@ function proj(){
     <div><span>تاريخ البداية</span><b>${esc(p.start_date)||"-"}</b></div>
     <div><span>تاريخ التسليم</span><b>${esc(p.due)||"-"}</b></div>
     ${S.role!=="employee"?`<div><span>السعر</span><b>${money(p.price)}</b></div>`:""}</div>`;
-  const acts=canEdit()?`<div class="acts"><button class="btn" onclick="modal('edit')">تعديل المشروع</button></div>`:"";
+  const acts=canEdit()?`<div class="acts"><button class="btn" onclick="modal('edit')">تعديل المشروع</button>${adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div>`:"";
   const items=S.entries.map(e=>`<div class="item"><div>${esc(e.body)}</div>${fileHtml(e)}<small>${esc(e.author_name)} · ${new Date(e.created_at).toLocaleDateString("ar")}</small>
   ${adm()?`<button class="sm del" onclick="delE('${e.id}')">حذف</button>`:""}</div>`).join("");
   const add=has(t.add)?`<textarea id="tx" rows="3" placeholder="${t.ph}"></textarea>${t.file?`<input id="fl" type="file" accept="${t.file}" ${t.multi?"multiple":""}>`:""}<button class="btn" id="bt" onclick="addE()">إضافة</button>`:"";
@@ -289,7 +301,7 @@ function modalHtml(){
   <input id="an" placeholder="الاسم الظاهر"><input id="au" dir="ltr" autocapitalize="none" placeholder="اسم المستخدم (إنجليزي)">
   <input id="ap" dir="ltr" value="${pass}"><button class="btn" id="ab" onclick="mkAccount()">إنشاء الحساب</button> <button class="btn alt" onclick="modal(null)">إغلاق</button>
   <h3 style="margin-top:18px">الحسابات الحالية (${S.members.length})</h3>
-  ${S.members.map(x=>`<div class="item"><b>${esc(x.name)}</b> · ${ROLES[x.role]} · <span dir="ltr">${esc(x.username)}</span></div>`).join("")||'<div class="empty">لا يوجد</div>'}</div></div>`;
+  ${S.members.map(x=>`<div class="item"><b>${esc(x.name)}</b> · ${ROLES[x.role]} · <span dir="ltr">${esc(x.username)}</span> <button class="sm del" onclick="delMember('${x.id}')">حذف الحساب</button></div>`).join("")||'<div class="empty">لا يوجد</div>'}</div></div>`;
 }
 async function mkAccount(){
   const role=$("ar").value,nm=$("an").value.trim(),user=$("au").value.trim().toLowerCase().replace(/[^a-z0-9._-]/g,""),pass=$("ap").value;
@@ -305,6 +317,13 @@ async function mkAccount(){
   await loadMembers();
   S.cred=`الموقع: ${location.origin+location.pathname}\nالدور: ${ROLES[role]}\nاسم المستخدم: ${user}\nكلمة المرور: ${pass}`;render();
 }
+async function delMember(id){
+  const m=S.members.find(x=>x.id===id);
+  if(!confirm("حذف حساب «"+(m?.name||"")+"» نهائياً؟"))return;
+  const {error}=await sb.rpc("delete_member",{uid:id});
+  if(error)return alert(error.message);
+  await loadMembers();await load();modal("acc");
+}
 function openImg(u){
   const d=document.createElement("div");d.className="lb";d.id="lb";d.onclick=closeImg;
   const i=document.createElement("img");i.src=u;const x=document.createElement("button");x.className="lbx";x.textContent="✕";
@@ -313,6 +332,20 @@ function openImg(u){
 function closeImg(){$("lb")?.remove()}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeImg()});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+/* شريط تثبيت التطبيق: أندرويد (زر تثبيت) وآيفون (تعليمات) */
+let DP=null;const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+function installBar(msg,btn=""){
+  if(standalone||$("ib"))return;
+  try{if(localStorage.getItem("ib0"))return}catch(e){}
+  const d=document.createElement("div");d.id="ib";
+  d.style.cssText="position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:12px;right:12px;z-index:50;background:#0f2742;color:#fff;padding:12px 14px;border-radius:14px;display:flex;gap:10px;align-items:center;font-size:14px;box-shadow:0 6px 20px #0006";
+  d.innerHTML=`<span style="flex:1">${msg}</span>${btn}<button onclick="closeIb()" style="background:none;border:0;color:#fff;font-size:22px;cursor:pointer;min-width:36px">✕</button>`;
+  document.body.appendChild(d);
+}
+function closeIb(){$("ib")?.remove();try{localStorage.setItem("ib0","1")}catch(e){}}
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();DP=e;installBar("ثبّت التطبيق على جوالك","<button class='btn' onclick='DP.prompt();closeIb()'>تثبيت</button>")});
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))
+  installBar("للتثبيت: اضغط زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية»");
 init();
 </script>
 </body>
