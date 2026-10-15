@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>إدارة المشاريع</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f2742">
+<meta name="theme-color" content="#545454">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="المشاريع">
@@ -15,19 +15,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--navy:#0f2742;--bg:#f4f6fa;--card:#fff;--text:#1b2a3b;--muted:#64748b;--line:#e2e8f0;--run:#2563eb;--late:#dc2626;--plan:#d97706;--done:#16a34a}
+:root{--navy:#545454;--bg:#f2f2f2;--card:#fff;--text:#2b2d2f;--muted:#6f7377;--line:#dcdcdc;--run:#55595e;--late:#b3473f;--plan:#b7862b;--done:#4e8a5f}
 *{box-sizing:border-box}
 body{margin:0;font-family:'Tajawal',Tahoma,sans-serif;background:var(--bg);color:var(--text)}
 input,select,textarea,button{font-family:inherit;font-size:15px}
 input,select,textarea{padding:10px;border:1px solid var(--line);border-radius:10px;width:100%;margin:4px 0 10px;background:#fff}
-:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+:focus-visible{outline:3px solid #9ca3af;outline-offset:2px}
 .wrap{max-width:1200px;margin:auto;padding:20px}
 header{background:var(--navy);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
 header h1{margin:0;font-size:19px}.hb{display:flex;gap:8px;align-items:center}.rl{font-size:13px;opacity:.85}
 .sm{background:#ffffff26;color:#fff;border:0;padding:6px 14px;border-radius:8px;cursor:pointer}
 .sm.del{background:#fee2e2;color:var(--late);margin-top:6px}
 .btn{background:var(--run);color:#fff;border:0;padding:11px 22px;border-radius:10px;cursor:pointer;font-weight:700;margin:4px 0}
-.btn:disabled{opacity:.6;cursor:wait}.btn.alt{background:#475569}.btn.danger{background:var(--late)}
+.btn:disabled{opacity:.6;cursor:wait}.btn.alt{background:#8a8d90}.btn.danger{background:var(--late)}
 .back{background:none;border:0;color:var(--run);font-weight:700;cursor:pointer;padding:0 0 12px}
 .s-run{--c:var(--run)}.s-plan{--c:var(--plan)}.s-done{--c:var(--done)}
 .top{display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px}.top h2{margin:0;font-size:22px}
@@ -36,8 +36,8 @@ header h1{margin:0;font-size:19px}.hb{display:flex;gap:8px;align-items:center}.r
 .col{background:#e9eef5;border-radius:18px;padding:12px;border-top:6px solid var(--c)}
 .col h3{margin:4px 4px 12px;display:flex;justify-content:space-between;align-items:center;font-size:18px}
 .col h3 b{background:var(--c);color:#fff;border-radius:20px;padding:0 12px;font-size:15px}
-.card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 4px 14px #0f274214;cursor:pointer;margin-bottom:12px}
-.img{height:170px;background:linear-gradient(135deg,#cbd5e1,#94a3b8) center/cover;position:relative}
+.card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 4px 14px #54545414;cursor:pointer;margin-bottom:12px}
+.img{height:170px;background:linear-gradient(135deg,#e2e2e2,#bcbcbc) center/cover;position:relative}
 .cw{position:absolute;top:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap}
 .chip{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;color:#fff}
 .chip.ty{background:#334155}
@@ -47,8 +47,8 @@ header h1{margin:0;font-size:19px}.hb{display:flex;gap:8px;align-items:center}.r
 .bar{height:8px;background:var(--line);border-radius:8px;margin:12px 0 6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--c)}
 .row{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
 /* صفحة المشروع */
-.banner{height:280px;border-radius:18px;background:linear-gradient(135deg,#cbd5e1,#94a3b8) center/cover;position:relative}
-.box{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 4px 14px #0f274210}
+.banner{height:280px;border-radius:18px;background:linear-gradient(135deg,#e2e2e2,#bcbcbc) center/cover;position:relative}
+.box{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 4px 14px #54545410}
 .det{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:14px 0}
 .det span{display:block;font-size:13px;color:var(--muted)}.det b{font-size:17px}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
@@ -66,11 +66,11 @@ header h1{margin:0;font-size:19px}.hb{display:flex;gap:8px;align-items:center}.r
 .login{max-width:380px;margin:50px auto}.msg{color:var(--late);font-size:14px;min-height:20px}
 .modal{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
 .modal .box{width:100%;max-width:440px;max-height:92vh;overflow:auto}
-.link{white-space:pre-wrap;background:#eff6ff;padding:10px;border-radius:10px;word-break:break-all;font-size:13px;direction:ltr;text-align:left}
+.link{white-space:pre-wrap;background:#f0f0f0;padding:10px;border-radius:10px;word-break:break-all;font-size:13px;direction:ltr;text-align:left}
 @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
 /* ===== الخلفية والشعار ===== */
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:url(bg.jpg) right bottom/cover no-repeat;pointer-events:none}
-.col{background:#e9eef5e6}
+.col{background:#efefefe6}
 .lg{height:36px;width:auto;vertical-align:middle;margin-inline-start:10px}
 .loginlg{display:block;margin:0 auto 12px;height:110px;width:auto}
 /* ===== توافق الجوال (آيفون وأندرويد) ===== */
@@ -344,7 +344,7 @@ function installBar(msg,btn=""){
   if(standalone||$("ib"))return;
   try{if(localStorage.getItem("ib0"))return}catch(e){}
   const d=document.createElement("div");d.id="ib";
-  d.style.cssText="position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:12px;right:12px;z-index:50;background:#0f2742;color:#fff;padding:12px 14px;border-radius:14px;display:flex;gap:10px;align-items:center;font-size:14px;box-shadow:0 6px 20px #0006";
+  d.style.cssText="position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:12px;right:12px;z-index:50;background:#545454;color:#fff;padding:12px 14px;border-radius:14px;display:flex;gap:10px;align-items:center;font-size:14px;box-shadow:0 6px 20px #0006";
   d.innerHTML=`<span style="flex:1">${msg}</span>${btn}<button onclick="closeIb()" style="background:none;border:0;color:#fff;font-size:22px;cursor:pointer;min-width:36px">✕</button>`;
   document.body.appendChild(d);
 }
