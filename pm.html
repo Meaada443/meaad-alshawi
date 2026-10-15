@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="المشاريع">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -67,6 +68,11 @@ header h1{margin:0;font-size:19px}.hb{display:flex;gap:8px;align-items:center}.r
 .modal .box{width:100%;max-width:440px;max-height:92vh;overflow:auto}
 .link{white-space:pre-wrap;background:#eff6ff;padding:10px;border-radius:10px;word-break:break-all;font-size:13px;direction:ltr;text-align:left}
 @media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
+/* ===== الخلفية والشعار ===== */
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:url(bg.jpg) right bottom/cover no-repeat;pointer-events:none}
+.col{background:#e9eef5e6}
+.lg{height:36px;width:auto;vertical-align:middle;margin-inline-start:10px}
+.loginlg{display:block;margin:0 auto 12px;height:110px;width:auto}
 /* ===== توافق الجوال (آيفون وأندرويد) ===== */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{-webkit-tap-highlight-color:transparent;padding-bottom:env(safe-area-inset-bottom);overflow-x:hidden}
@@ -118,7 +124,7 @@ async function init(){
   S.user=data.session?.user||null;S.user?boot():loginView();
 }
 function loginView(msg=""){
-  $("app").innerHTML=`<div class="login box"><h2>تسجيل الدخول</h2>
+  $("app").innerHTML=`<div class="login box"><img class="loginlg" src="logo.png" alt=""><h2 style="text-align:center">تسجيل الدخول</h2>
   <input id="em" placeholder="اسم المستخدم أو البريد الإلكتروني" autocapitalize="none" dir="ltr">
   <input id="pw" type="password" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')signIn()">
   <div class="msg">${msg}</div><button class="btn" onclick="signIn()">دخول</button></div>`;
@@ -170,7 +176,7 @@ async function loadE(){
 
 /* ===== العرض ===== */
 function render(){
-  const hd=`<header><h1>إدارة المشاريع</h1><div class="hb"><span class="rl">${esc(S.name)} · ${ROLES[S.role]||""}</span>
+  const hd=`<header><h1><img class="lg" src="logo-white.png" alt="">إدارة المشاريع</h1><div class="hb"><span class="rl">${esc(S.name)} · ${ROLES[S.role]||""}</span>
   ${adm()?`<button class="sm" onclick="modal('acc')">الحسابات</button>`:""}<button class="sm" onclick="out()">خروج</button></div></header>`;
   const b=S.role==="none"?'<div class="box note">حسابك بدون صلاحيات، تواصل مع مدير الشركة.</div>':S.cur?proj():home();
   $("app").innerHTML=hd+'<div class="wrap">'+b+'</div>'+(S.modal||S.cred?modalHtml():"");

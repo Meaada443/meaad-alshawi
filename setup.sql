@@ -24,7 +24,7 @@ alter table projects enable row level security;
 alter table entries enable row level security;
 
 create policy p_sel on profiles for select using(id=auth.uid() or my_role()='admin');
-create policy j_sel on projects for select using(can_see(id));
+create policy j_sel on projects for select using(my_role()='admin' or employee_id=auth.uid() or client_id=auth.uid());
 create policy j_ins on projects for insert with check(my_role()='admin');
 create policy j_upd on projects for update using(my_role()='admin' or employee_id=auth.uid());
 create policy j_del on projects for delete using(my_role()='admin');
@@ -60,3 +60,14 @@ create policy m_del on storage.objects for delete to authenticated using(bucket_
 
 -- أول مدير: أنشئ مستخدماً من Authentication > Users (مثال: boss@app.example.com) ثم شغّل:
 -- insert into profiles(id,role,name,username) select id,'admin','المدير','boss' from auth.users where email='boss@app.example.com';
+
+-- حذف حساب (للمدير فقط)
+create function delete_member(uid uuid) returns void
+language plpgsql security definer set search_path=public as $$
+begin
+  if my_role()<>'admin' then raise exception 'غير مسموح'; end if;
+  if not exists(select 1 from profiles where id=uid and role in('employee','client')) then raise exception 'لا يمكن حذف هذا الحساب'; end if;
+  update projects set employee_id=null,employee_name=null where employee_id=uid;
+  update projects set client_id=null,client_name=null where client_id=uid;
+  delete from auth.users where id=uid;
+end $$;
