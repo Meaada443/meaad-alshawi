@@ -176,7 +176,7 @@ async function loadE(){
 
 /* ===== العرض ===== */
 function render(){
-  const hd=`<header><h1><img class="lg" src="logo-white.png" alt="">إدارة المشاريع</h1><div class="hb"><span class="rl">${esc(S.name)} · ${ROLES[S.role]||""}</span>
+  const hd=`<header><h1><img class="lg" src="logo-white.png" alt="بيوت"></h1><div class="hb"><span class="rl">${esc(S.name)} · ${ROLES[S.role]||""}</span>
   ${adm()?`<button class="sm" onclick="modal('acc')">الحسابات</button>`:""}<button class="sm" onclick="out()">خروج</button></div></header>`;
   const b=S.role==="none"?'<div class="box note">حسابك بدون صلاحيات، تواصل مع مدير الشركة.</div>':S.cur?proj():home();
   $("app").innerHTML=hd+'<div class="wrap">'+b+'</div>'+(S.modal||S.cred?modalHtml():"");
