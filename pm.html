@@ -73,6 +73,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:url(bg.jpg)
 .col{background:#0000002e}.col h3,.top h2,.back{color:#fff}.col .empty{color:#e8e8e8}.wrap>.row{color:#f0f0f0}
 .lg{height:42px;width:auto;vertical-align:middle;margin-inline-start:10px}
 .loginlg{display:block;margin:0 auto 12px;height:130px;width:auto}
+.tb{width:100%;border-collapse:collapse}.tb th,.tb td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;font-size:14px}
 /* ===== توافق الجوال (آيفون وأندرويد) ===== */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{-webkit-tap-highlight-color:transparent;padding-bottom:env(safe-area-inset-bottom);overflow-x:hidden}
@@ -139,8 +140,8 @@ async function out(){await sb.auth.signOut();location.reload()}
 async function boot(){
   const {data:p}=await sb.from("profiles").select("role,name").eq("id",S.user.id).maybeSingle();
   S.role=p?.role||"none";S.name=p?.name||"";
-  if(adm())await loadMembers();
-  await load();
+  if(adm())await Promise.all([loadMembers(),loadWs(),cntReq()]);
+  await loadAbout();await load();
 }
 async function loadMembers(){
   const {data}=await sb.from("profiles").select("*").in("role",["employee","client"]).order("created_at");
@@ -157,9 +158,9 @@ async function load(){
   if(S.solo){S.cur=S.projects[0].id;if(!has(TABS.find(t=>t.k===S.tab).see))S.tab=firstTab();await loadE()}
   render();
 }
-async function sign(paths){
+async function sign(paths,bk="media"){
   const need=[...new Set(paths.filter(x=>x&&!S.urls[x]))];if(!need.length)return;
-  const {data}=await sb.storage.from("media").createSignedUrls(need,7200);
+  const {data}=await sb.storage.from(bk).createSignedUrls(need,7200);
   (data||[]).forEach(d=>{if(d.signedUrl)S.urls[d.path]=d.signedUrl});
 }
 async function up(pid,f){
@@ -177,9 +178,9 @@ async function loadE(){
 /* ===== العرض ===== */
 function render(){
   const hd=`<header><h1><img class="lg" src="logo-white.png" alt="بيوت"></h1><div class="hb"><span class="rl">${esc(S.name)} · ${ROLES[S.role]||""}</span>
-  ${adm()?`<button class="sm" onclick="modal('acc')">الحسابات</button>`:""}<button class="sm" onclick="out()">خروج</button></div></header>`;
+  <button class="sm" onclick="out()">خروج</button></div></header>`;
   const b=S.role==="none"?'<div class="box note">حسابك بدون صلاحيات، تواصل مع مدير الشركة.</div>':S.cur?proj():home();
-  $("app").innerHTML=hd+'<div class="wrap">'+b+'</div>'+(S.modal||S.cred?modalHtml():"");
+  $("app").innerHTML=hd+'<div class="wrap">'+navHtml()+b+'</div>'+(S.modal||S.cred?modalHtml():"");
 }
 function card(p){
   const u=S.urls[p.cover_path];
@@ -194,7 +195,7 @@ function home(){
   }).join("");
   return `<div class="top"><h2>المشاريع</h2>${adm()?`<button class="btn" onclick="modal('new')">＋ مشروع جديد</button>`:""}</div><div class="cols">${cols}</div>`;
 }
-async function openP(id){S.cur=id;S.tab=firstTab();await loadE();render();scrollTo(0,0)}
+async function openP(id){S.cur=id;S.tab=firstTab();await loadE();await loadPW();render();scrollTo(0,0)}
 async function setTab(k){S.tab=k;await loadE();render()}
 function fileHtml(e){
   const u=S.urls[e.file_path];if(!u)return"";const t=e.file_type||"";
@@ -220,7 +221,7 @@ function proj(){
   <div class="banner ${ST[p.status][1]}" ${u?`style="background-image:url('${u}')"`:""}>${chip(p)}</div>
   <div class="top" style="margin-top:16px"><h2>${esc(p.name)}${p.loc?" · "+esc(p.loc):""}</h2></div>
   <div class="bar ${ST[p.status][1]}"><i style="width:${clamp(p.progress)}%"></i></div><div class="row"><span>الإنجاز ${clamp(p.progress)}%</span></div>
-  ${det}${acts}
+  ${det}${acts}${adm()?pwBox():""}
   <div class="tabs">${T.map(x=>`<div class="tab ${x.k===S.tab?"on":""}" onclick="setTab('${x.k}')">${x.n}</div>`).join("")}</div>
   <div class="box">${add}${items||'<div class="empty">لا يوجد شيء بعد</div>'}</div>`;
 }
@@ -300,6 +301,7 @@ function modalHtml(){
   <button class="btn" onclick="navigator.clipboard.writeText(S.cred);this.textContent='تم النسخ'">نسخ البيانات</button> <button class="btn alt" onclick="modal('acc')">رجوع</button></div></div>`;
   if(m==="new")return projForm({status:"plan",progress:0});
   if(m==="edit")return projForm(S.projects.find(x=>x.id===S.cur));
+  if(NEWM[m])return NEWM[m]();
   const pass=[...crypto.getRandomValues(new Uint8Array(8))].map(x=>"abcdefghjkmnpqrstuvwxyz23456789"[x%31]).join("");
   return `<div class="modal"><div class="box"><h3>الحسابات</h3>
   <p class="lbl">الموظف يدير المشاريع المسندة له فقط، والعميل يشاهد مشروعه فقط. اربطهم بالمشروع من «تعديل المشروع».</p>
@@ -338,6 +340,122 @@ function openImg(u){
 function closeImg(){$("lb")?.remove()}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeImg()});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+/* ===== من نحن / حجز خدمة / الورش / جدول الأعمال ===== */
+Object.assign(S,{ws:[],pw:[],works:[],reqs:[],about:"",newReq:0});
+const SV=[{n:"تصميم",u:"م²",ph:"المساحة بالمتر المربع"},{n:"تنفيذ",f:1,h:"ادخل الملف المطلوب تنفيذه وسيتم إرسال السعر في أقرب وقت"},
+{n:"إشراف",u:"م³",ph:"الحجم بالمتر المكعب"},{n:"تأثيث",u:"م²",ph:"المساحة بالمتر المربع"},{n:"استشارة ميدانية"},{n:"هوية بصرية كاملة"},
+{n:"تطوير المشاريع",f:1,h:"ارفع المشروع أو المنتج وسيتم التواصل معكم من فريقنا المختص"},{n:"تسعير المشاريع"},{n:"تسويق"}];
+const mclose='<button class="btn alt" onclick="modal(null)">إغلاق</button>';
+function wa(p){let d=String(p||"").replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="966"+d.slice(1);else if(d.length===9&&d[0]==="5")d="966"+d;return "https://wa.me/"+d}
+const stTxt=s=>s==="done"?"تمت المعالجة":"قيد المراجعة";
+function navHtml(){
+  if(S.role==="none")return"";
+  const L=[["about","من نحن"]];
+  if(S.role==="client")L.push(["book","حجز خدمة"]);
+  if(adm())L.push(["reqs","طلبات الخدمات"+(S.newReq?` (${S.newReq})`:"")],["ws","الورش"],["works","جدول الأعمال"],["acc","الحسابات"]);
+  return `<div class="tabs" style="margin:0 0 14px">${L.map(x=>`<div class="tab" onclick="nav('${x[0]}')">${x[1]}</div>`).join("")}</div>`;
+}
+async function loadAbout(){const {data}=await sb.from("settings").select("value").eq("key","about").maybeSingle();S.about=data?.value||""}
+async function loadWs(){const {data}=await sb.from("workshops").select("*").order("created_at");S.ws=data||[]}
+async function cntReq(){const {count}=await sb.from("service_requests").select("id",{count:"exact",head:true}).eq("status","new");S.newReq=count||0}
+async function loadPW(){S.pw=[];if(adm()&&S.cur){const {data}=await sb.from("project_workshops").select("workshop_id").eq("project_id",S.cur);S.pw=(data||[]).map(x=>x.workshop_id)}}
+async function nav(m){
+  S.modal=m;S.cred=null;
+  if(m==="ws")await loadWs();
+  if(m==="works"){const {data}=await sb.from("works").select("*").order("created_at");S.works=data||[]}
+  if(m==="reqs"||m==="book"){
+    const {data}=await sb.from("service_requests").select("*").order("created_at",{ascending:false});
+    S.reqs=data||[];await sign(S.reqs.map(r=>r.file_path),"requests");if(adm())S.newReq=S.reqs.filter(r=>r.status==="new").length;
+  }
+  render();
+}
+/* من نحن */
+function aboutHtml(){
+  const t=S.about||"";
+  return `<div class="modal"><div class="box"><img class="loginlg" src="logo.png" alt="بيوت" style="height:90px"><h3 style="text-align:center">من نحن</h3>
+  ${adm()?`<textarea id="ab" rows="9" placeholder="اكتب نبذة عن الشركة وخدماتها وطرق التواصل...">${esc(t)}</textarea><button class="btn" onclick="saveAbout()">حفظ</button> `:`<div style="white-space:pre-wrap;line-height:1.9">${esc(t)||"قريباً"}</div>`}
+  ${mclose}</div></div>`;
+}
+async function saveAbout(){const v=$("ab").value;const {error}=await sb.from("settings").upsert({key:"about",value:v});if(error)return alert(error.message);S.about=v;alert("تم الحفظ ✅")}
+/* حجز خدمة (العميل) */
+function bookFields(i){const s=SV[i];return(s.h?`<p class="lbl">${s.h}</p>`:"")+(s.u?`<input id="bq" type="number" min="0" step="any" inputmode="decimal" placeholder="${s.ph} (${s.u})">`:"")+(s.f?'<input id="bfl" type="file">':"")}
+function bookHtml(){
+  return `<div class="modal"><div class="box"><h3>حجز خدمة</h3>
+  <select id="bs" onchange="$('bf').innerHTML=bookFields(this.value)">${SV.map((s,i)=>`<option value="${i}">${s.n}</option>`).join("")}</select>
+  <div id="bf">${bookFields(0)}</div>
+  <textarea id="bn" rows="3" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+  <input id="bp" type="tel" dir="ltr" inputmode="tel" placeholder="رقم الجوال للتواصل">
+  <button class="btn" id="bb" onclick="sendReq()">إرسال الطلب</button> ${mclose}
+  <h3 style="margin-top:18px">طلباتي (${S.reqs.length})</h3>
+  ${S.reqs.map(r=>`<div class="item"><b>${esc(r.service)}</b>${r.qty?` · ${r.qty} ${esc(r.unit)}`:""} · ${stTxt(r.status)}<small>${new Date(r.created_at).toLocaleDateString("ar")}</small></div>`).join("")||'<div class="empty">لا توجد طلبات</div>'}</div></div>`;
+}
+async function sendReq(){
+  const s=SV[$("bs").value],q=$("bq")?.value,ph=$("bp").value.trim(),f=$("bfl")?.files[0];
+  if(s.u&&!(Number(q)>0))return alert("اكتب القيمة المطلوبة");
+  if(s.f&&!f)return alert("ارفع الملف المطلوب");
+  if(ph.replace(/\D/g,"").length<8)return alert("اكتب رقم جوال صحيح للتواصل");
+  const b=$("bb"),reset=()=>{b.disabled=false;b.textContent="إرسال الطلب"};
+  b.disabled=true;b.textContent="جاري الإرسال...";
+  let fp=null;
+  if(f){
+    const ext=(f.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"")||"bin";fp=`${S.user.id}/${crypto.randomUUID()}.${ext}`;
+    const {error}=await sb.storage.from("requests").upload(fp,f,{contentType:f.type||"application/octet-stream"});
+    if(error){reset();return alert("فشل رفع الملف: "+error.message)}
+  }
+  const {error}=await sb.from("service_requests").insert({service:s.n,qty:s.u?Number(q):null,unit:s.u||null,notes:$("bn").value.trim()||null,phone:ph,file_path:fp,client_name:S.name});
+  if(error){reset();return alert(error.message)}
+  alert("تم إرسال طلبك ✅ سنتواصل معك قريباً");await nav("book");
+}
+/* طلبات الخدمات (المدير) */
+function reqsHtml(){
+  return `<div class="modal"><div class="box"><h3>طلبات الخدمات (${S.reqs.length})</h3>${mclose}
+  ${S.reqs.map(r=>`<div class="item"><b>${esc(r.service)}</b>${r.qty?` · ${r.qty} ${esc(r.unit)}`:""}<br>العميل: ${esc(r.client_name)} · <a dir="ltr" href="${wa(r.phone)}" target="_blank" rel="noopener">${esc(r.phone)}</a>
+  ${r.notes?`<div>${esc(r.notes)}</div>`:""}${r.file_path&&S.urls[r.file_path]?`<div><a href="${S.urls[r.file_path]}" target="_blank" rel="noopener">📎 فتح الملف</a></div>`:""}
+  <small>${new Date(r.created_at).toLocaleString("ar")} · ${r.status==="done"?"تمت المعالجة":"جديد"}</small>
+  <button class="sm" onclick="setReq('${r.id}','${r.status==="done"?"new":"done"}')">${r.status==="done"?"إعادة فتح":"تمت المعالجة"}</button> <button class="sm del" onclick="delReq('${r.id}')">حذف</button></div>`).join("")||'<div class="empty">لا توجد طلبات</div>'}</div></div>`;
+}
+async function setReq(id,st){const {error}=await sb.from("service_requests").update({status:st}).eq("id",id);if(error)alert(error.message);await nav("reqs")}
+async function delReq(id){
+  if(!confirm("حذف الطلب؟"))return;
+  const r=S.reqs.find(x=>x.id===id);if(r?.file_path)await sb.storage.from("requests").remove([r.file_path]);
+  await sb.from("service_requests").delete().eq("id",id);await nav("reqs");
+}
+/* الورش (المدير فقط) */
+function wsHtml(){
+  return `<div class="modal"><div class="box"><h3>الورش (${S.ws.length}) · للمدير فقط</h3>
+  <input id="wn" placeholder="اسم الورشة"><input id="wp" type="tel" dir="ltr" placeholder="رقم واتساب الورشة"><input id="wt" placeholder="التخصص (اختياري)">
+  <button class="btn" onclick="addWs()">إضافة ورشة</button> ${mclose}
+  ${S.ws.map(w=>`<div class="item"><b>${esc(w.name)}</b>${w.note?" · "+esc(w.note):""}<br>${w.phone?`<a dir="ltr" href="${wa(w.phone)}" target="_blank" rel="noopener">واتساب ${esc(w.phone)}</a>`:""} <button class="sm del" onclick="delWs('${w.id}')">حذف</button></div>`).join("")||'<div class="empty">لا توجد ورش</div>'}</div></div>`;
+}
+async function addWs(){
+  const name=$("wn").value.trim();if(!name)return alert("اكتب اسم الورشة");
+  const {error}=await sb.from("workshops").insert({name,phone:$("wp").value.trim()||null,note:$("wt").value.trim()||null});
+  if(error)return alert(error.message);await nav("ws");
+}
+async function delWs(id){if(!confirm("حذف الورشة؟ ستُزال من المشاريع المسندة لها."))return;await sb.from("workshops").delete().eq("id",id);await nav("ws")}
+function pwBox(){
+  const mine=S.ws.filter(w=>S.pw.includes(w.id)),rest=S.ws.filter(w=>!S.pw.includes(w.id));
+  return `<div class="box" style="margin-top:14px"><b>الورش المسؤولة عن المشروع (تظهر للمدير فقط)</b>
+  ${mine.map(w=>`<div class="item"><b>${esc(w.name)}</b>${w.note?" · "+esc(w.note):""} ${w.phone?`<a href="${wa(w.phone)}" target="_blank" rel="noopener">واتساب</a>`:""} <button class="sm del" onclick="rmPW('${w.id}')">إزالة</button></div>`).join("")||'<div class="empty">لم تُسند ورشة بعد</div>'}
+  ${rest.length?`<select id="pws"><option value="">— اختر ورشة —</option>${rest.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join("")}</select><button class="btn" onclick="addPW()">إسناد ورشة</button>`:'<p class="lbl">أضف ورشاً من زر «الورش» أعلى الصفحة</p>'}</div>`;
+}
+async function addPW(){const w=$("pws").value;if(!w)return;const {error}=await sb.from("project_workshops").insert({project_id:S.cur,workshop_id:w});if(error)return alert(error.message);await loadPW();render()}
+async function rmPW(w){await sb.from("project_workshops").delete().eq("project_id",S.cur).eq("workshop_id",w);await loadPW();render()}
+/* جدول الأعمال (المدير فقط) */
+function worksHtml(){
+  return `<div class="modal"><div class="box"><h3>جدول الأعمال</h3>
+  <input id="kt" placeholder="العمل"><input id="kp" type="tel" dir="ltr" placeholder="رقم التواصل">
+  <button class="btn" onclick="addWork()">إضافة</button> ${mclose}
+  <div style="overflow-x:auto"><table class="tb"><tr><th>العمل</th><th>رقم التواصل</th><th></th></tr>
+  ${S.works.map(w=>`<tr><td>${esc(w.title)}</td><td dir="ltr">${w.phone?`<a href="tel:${w.phone.replace(/[^\d+]/g,"")}">${esc(w.phone)}</a>`:"-"}</td><td>${w.phone?`<a href="${wa(w.phone)}" target="_blank" rel="noopener">واتساب</a> `:""}<button class="sm del" onclick="delWork('${w.id}')">حذف</button></td></tr>`).join("")||'<tr><td colspan="3" class="empty">لا توجد أعمال</td></tr>'}</table></div></div></div>`;
+}
+async function addWork(){
+  const title=$("kt").value.trim();if(!title)return alert("اكتب العمل");
+  const {error}=await sb.from("works").insert({title,phone:$("kp").value.trim()||null});
+  if(error)return alert(error.message);await nav("works");
+}
+async function delWork(id){if(!confirm("حذف؟"))return;await sb.from("works").delete().eq("id",id);await nav("works")}
+const NEWM={about:aboutHtml,book:bookHtml,reqs:reqsHtml,ws:wsHtml,works:worksHtml};
 /* شريط تثبيت التطبيق: أندرويد (زر تثبيت) وآيفون (تعليمات) */
 let DP=null;const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
 function installBar(msg,btn=""){
