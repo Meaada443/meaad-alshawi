@@ -1,6 +1,6 @@
 -- شغّل هذا الملف كاملاً مرة واحدة: Supabase > SQL Editor
 create table profiles(id uuid primary key references auth.users on delete cascade,
-  role text not null default 'none' check(role in('admin','employee','client','none')),
+  role text not null default 'none' check(role in('admin','employee','engineer','client','none')),
   name text, username text, created_at timestamptz default now());
 create table projects(id uuid primary key default gen_random_uuid(), name text not null, loc text,
   status text default 'plan' check(status in('plan','run','done')), progress int default 0,
@@ -30,7 +30,7 @@ create policy j_upd on projects for update using(my_role()='admin' or employee_i
 create policy j_del on projects for delete using(my_role()='admin');
 create policy e_sel on entries for select using(can_see(project_id) and (my_role()<>'client' or kind<>'internal'));
 create policy e_ins on entries for insert with check(can_see(project_id) and author_id=auth.uid()
-  and (my_role() in('admin','employee') or (my_role()='client' and kind='messages')));
+  and (my_role() in('admin','employee','engineer') or (my_role()='client' and kind='messages')));
 create policy e_del on entries for delete using(my_role()='admin');
 
 -- الموظف لا يقدر يغيّر الموظف/العميل/السعر
@@ -46,7 +46,7 @@ create function create_member(uid uuid,new_role text,nm text,un text) returns vo
 language plpgsql security definer set search_path=public as $$
 begin
   if my_role()<>'admin' then raise exception 'غير مسموح'; end if;
-  if new_role not in('employee','client') then raise exception 'دور غير صحيح'; end if;
+  if new_role not in('employee','engineer','client') then raise exception 'دور غير صحيح'; end if;
   insert into profiles(id,role,name,username) values(uid,new_role,nm,un);
 end $$;
 
@@ -55,7 +55,7 @@ insert into storage.buckets(id,name,public) values('media','media',false) on con
 create policy m_sel on storage.objects for select to authenticated
   using(bucket_id='media' and can_see(((storage.foldername(name))[1])::uuid));
 create policy m_ins on storage.objects for insert to authenticated
-  with check(bucket_id='media' and my_role() in('admin','employee') and can_see(((storage.foldername(name))[1])::uuid));
+  with check(bucket_id='media' and my_role() in('admin','employee','engineer') and can_see(((storage.foldername(name))[1])::uuid));
 create policy m_del on storage.objects for delete to authenticated using(bucket_id='media' and my_role()='admin');
 
 -- أول مدير: أنشئ مستخدماً من Authentication > Users (مثال: boss@app.example.com) ثم شغّل:
@@ -66,7 +66,7 @@ create function delete_member(uid uuid) returns void
 language plpgsql security definer set search_path=public as $$
 begin
   if my_role()<>'admin' then raise exception 'غير مسموح'; end if;
-  if not exists(select 1 from profiles where id=uid and role in('employee','client')) then raise exception 'لا يمكن حذف هذا الحساب'; end if;
+  if not exists(select 1 from profiles where id=uid and role in('employee','engineer','client')) then raise exception 'لا يمكن حذف هذا الحساب'; end if;
   update projects set employee_id=null,employee_name=null where employee_id=uid;
   update projects set client_id=null,client_name=null where client_id=uid;
   delete from auth.users where id=uid;

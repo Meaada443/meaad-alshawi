@@ -96,21 +96,21 @@ const SBU="https://nhtrghkgmxysesdoysix.supabase.co",SBK="eyJhbGciOiJIUzI1NiIsIn
 const UD="app.example.com";   // نطاق داخلي لاسم المستخدم، لازم يطابق ما تكتبه عند إنشاء المدير
 const sb=supabase.createClient(SBU,SBK);
 const sb2=supabase.createClient(SBU,SBK,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-const ROLES={admin:"مدير الشركة",employee:"موظف",client:"عميل"};
+const ROLES={admin:"مدير الشركة",employee:"موظف",engineer:"مهندس",client:"عميل"};
 const ST={plan:["التصميم","s-plan"],run:["قيد التنفيذ","s-run"],done:["تم التسليم","s-done"]};
 /* see = من يشاهد ، add = من يضيف ، الحذف للمدير فقط */
 const TABS=[
-{k:"updates",n:"التحديثات والصور",see:"admin,employee,client",add:"admin,employee",ph:"اكتب تحديثاً عن سير العمل...",file:"image/*,video/*",multi:1},
-{k:"reports",n:"التقارير والملفات",see:"admin,employee,client",add:"admin,employee",ph:"عنوان التقرير وملخصه...",file:"*/*"},
-{k:"messages",n:"المراسلات",see:"admin,employee,client",add:"admin,employee,client",ph:"اكتب رسالة..."},
-{k:"internal",n:"ملاحظات داخلية",see:"admin,employee",add:"admin,employee",ph:"ملاحظة داخلية (لا يراها العميل)..."}];
+{k:"updates",n:"التحديثات والصور",see:"admin,employee,engineer,client",add:"admin,employee,engineer",ph:"اكتب تحديثاً عن سير العمل...",file:"image/*,video/*",multi:1},
+{k:"reports",n:"التقارير والملفات",see:"admin,employee,engineer,client",add:"admin,employee,engineer",ph:"عنوان التقرير وملخصه...",file:"*/*"},
+{k:"messages",n:"المراسلات",see:"admin,employee,engineer,client",add:"admin,employee,engineer,client",ph:"اكتب رسالة..."},
+{k:"internal",n:"ملاحظات داخلية",see:"admin,employee,engineer",add:"admin,employee,engineer",ph:"ملاحظة داخلية (لا يراها العميل)..."}];
 let S={user:null,role:"none",name:"",projects:[],members:[],cur:null,tab:"updates",entries:[],urls:{},modal:null,cred:null,solo:false};
 const has=(l,r=S.role)=>l.split(",").includes(r);
 const $=id=>document.getElementById(id);
 const clamp=v=>Math.max(0,Math.min(100,parseInt(v)||0));
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>v==null||v===""?"-":Number(v).toLocaleString("en-US");
-const adm=()=>S.role==="admin",canEdit=()=>S.role==="admin"||S.role==="employee";
+const adm=()=>S.role==="admin",canEdit=()=>["admin","employee","engineer"].includes(S.role);
 const firstTab=()=>TABS.find(t=>has(t.see)).k;
 function timing(p){
   if(p.status==="done"||!p.due)return null;
@@ -144,7 +144,7 @@ async function boot(){
   await loadAbout();await load();
 }
 async function loadMembers(){
-  const {data}=await sb.from("profiles").select("*").in("role",["employee","client"]).order("created_at");
+  const {data}=await sb.from("profiles").select("*").in("role",["employee","engineer","client"]).order("created_at");
   S.members=data||[];
 }
 
@@ -208,11 +208,11 @@ function proj(){
   const T=TABS.filter(t=>has(t.see)),t=TABS.find(x=>x.k===S.tab),u=S.urls[p.cover_path];
   const det=`<div class="box det">
     <div><span>الحالة</span><b>${ST[p.status][0]}</b></div>
-    <div><span>الموظف المسؤول</span><b>${esc(p.employee_name)||"-"}</b></div>
+    <div><span>المهندس / الموظف المسؤول</span><b>${esc(p.employee_name)||"-"}</b></div>
     <div><span>العميل</span><b>${esc(p.client_name)||"-"}</b></div>
     <div><span>تاريخ البداية</span><b>${esc(p.start_date)||"-"}</b></div>
     <div><span>تاريخ التسليم</span><b>${esc(p.due)||"-"}</b></div>
-    ${S.role!=="employee"?`<div><span>السعر</span><b>${money(p.price)}</b></div>`:""}</div>`;
+    ${!["employee","engineer"].includes(S.role)?`<div><span>السعر</span><b>${money(p.price)}</b></div>`:""}</div>`;
   const acts=canEdit()?`<div class="acts"><button class="btn" onclick="modal('edit')">تعديل المشروع</button>${adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div>`:"";
   const items=S.entries.map(e=>`<div class="item"><div>${esc(e.body)}</div>${fileHtml(e)}<small>${esc(e.author_name)} · ${new Date(e.created_at).toLocaleDateString("ar")}</small>
   ${adm()?`<button class="sm del" onclick="delE('${e.id}')">حذف</button>`:""}</div>`).join("");
@@ -278,12 +278,12 @@ async function delE(id){
 
 /* ===== النوافذ والحسابات ===== */
 function modal(m){S.modal=m;S.cred=null;render()}
-const opts=(role,sel)=>'<option value="">— غير محدد —</option>'+S.members.filter(m=>m.role===role).map(m=>`<option value="${m.id}" ${m.id===sel?"selected":""}>${esc(m.name)}</option>`).join("");
+const opts=(role,sel)=>'<option value="">— غير محدد —</option>'+S.members.filter(m=>[].concat(role).includes(m.role)).map(m=>`<option value="${m.id}" ${m.id===sel?"selected":""}>${esc(m.name)} · ${ROLES[m.role]}</option>`).join("");
 function projForm(p){
   const edit=S.modal==="edit";
   return `<div class="modal"><div class="box"><h3>${edit?"تعديل المشروع":"مشروع جديد"}</h3>
   <input id="mn" placeholder="اسم المشروع" value="${esc(p.name)}"><input id="ml" placeholder="الموقع / المدينة" value="${esc(p.loc)}">
-  ${adm()?`<label class="lbl">الموظف المسؤول</label><select id="me">${opts("employee",p.employee_id)}</select>
+  ${adm()?`<label class="lbl">المهندس / الموظف المسؤول</label><select id="me">${opts(["employee","engineer"],p.employee_id)}</select>
   <label class="lbl">العميل</label><select id="mcl">${opts("client",p.client_id)}</select>`:""}
   <select id="ms">${Object.keys(ST).map(k=>`<option value="${k}" ${k===p.status?"selected":""}>${ST[k][0]}</option>`).join("")}</select>
   <label class="lbl">نسبة الإنجاز %</label><input id="mp" type="number" min="0" max="100" value="${clamp(p.progress)}">
@@ -305,7 +305,7 @@ function modalHtml(){
   const pass=[...crypto.getRandomValues(new Uint8Array(8))].map(x=>"abcdefghjkmnpqrstuvwxyz23456789"[x%31]).join("");
   return `<div class="modal"><div class="box"><h3>الحسابات</h3>
   <p class="lbl">الموظف يدير المشاريع المسندة له فقط، والعميل يشاهد مشروعه فقط. اربطهم بالمشروع من «تعديل المشروع».</p>
-  <select id="ar"><option value="employee">موظف</option><option value="client">عميل</option></select>
+  <select id="ar"><option value="engineer">مهندس</option><option value="employee">موظف</option><option value="client">عميل</option></select>
   <input id="an" placeholder="الاسم الظاهر"><input id="au" dir="ltr" autocapitalize="none" placeholder="اسم المستخدم (إنجليزي)">
   <input id="ap" dir="ltr" value="${pass}"><button class="btn" id="ab" onclick="mkAccount()">إنشاء الحساب</button> <button class="btn alt" onclick="modal(null)">إغلاق</button>
   <h3 style="margin-top:18px">الحسابات الحالية (${S.members.length})</h3>
