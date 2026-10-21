@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="tus.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--navy:#545454;--bg:#737373;--card:#ececec;--text:#2b2d2f;--muted:#6f7377;--line:#bdbdbd;--run:#55595e;--late:#b3473f;--plan:#b7862b;--done:#4e8a5f}
@@ -136,12 +137,16 @@ async function signIn(){
   if(error)return loginView("اسم المستخدم أو كلمة المرور غير صحيحة");
   S.user=data.user;boot();
 }
-async function out(){await sb.auth.signOut();location.reload()}
+async function out(){
+  try{const reg=await navigator.serviceWorker.ready,s=await reg.pushManager.getSubscription();if(s)await sb.from("push_subscriptions").delete().eq("endpoint",s.endpoint)}catch(e){}
+  await sb.auth.signOut();location.reload()
+}
 async function boot(){
   const {data:p}=await sb.from("profiles").select("role,name").eq("id",S.user.id).maybeSingle();
   S.role=p?.role||"none";S.name=p?.name||"";
   if(adm())await Promise.all([loadMembers(),loadWs(),cntReq()]);
-  await loadAbout();await load();
+  await loadAbout();await initPush();await load();
+  if(!S.rt)startLive();
 }
 async function loadMembers(){
   const {data}=await sb.from("profiles").select("*").in("role",["employee","engineer","client"]).order("created_at");
@@ -162,12 +167,37 @@ async function sign(paths,bk="media"){
   const need=[...new Set(paths.filter(x=>x&&!S.urls[x]))];if(!need.length)return;
   const {data}=await sb.storage.from(bk).createSignedUrls(need,7200);
   (data||[]).forEach(d=>{if(d.signedUrl)S.urls[d.path]=d.signedUrl});
+  if(bk!=="media"||S.thOk===false)return;
+  const imgs=need.filter(x=>/\.(jpe?g|png|webp)$/i.test(x));
+  await Promise.all(imgs.map(async x=>{try{const {data:t}=await sb.storage.from(bk).createSignedUrl(x,7200,{transform:{width:800,quality:70}});if(t?.signedUrl)S.th[x]=t.signedUrl}catch(e){}}));
+  if(S.thOk===undefined&&imgs.length&&S.th[imgs[0]]){S.thOk=await fetch(S.th[imgs[0]],{method:"HEAD"}).then(r=>r.ok).catch(()=>false);if(!S.thOk)S.th={}}
 }
-async function up(pid,f){
-  const ext=(f.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"")||"bin";
-  const path=`${pid}/${crypto.randomUUID()}.${ext}`;
-  const {error}=await sb.storage.from("media").upload(path,f,{contentType:f.type||"application/octet-stream"});
-  if(error){alert("فشل الرفع: "+error.message);return null}
+const tu=x=>S.thOk?S.th[x]:null,cu=p=>tu(p.cover_path)||S.urls[p.cover_path];
+const MAXB=5*1024*1048576;
+function tusUp(bk,path,f,onp){
+  return new Promise(async(res,rej)=>{
+    const {data}=await sb.auth.getSession();
+    const u=new tus.Upload(f,{endpoint:SBU.replace(".supabase.co",".storage.supabase.co")+"/storage/v1/upload/resumable",
+      retryDelays:[0,2000,5000,10000,20000],headers:{authorization:"Bearer "+data.session.access_token,"x-upsert":"false"},
+      uploadDataDuringCreation:true,removeFingerprintOnSuccess:true,chunkSize:6*1048576,
+      metadata:{bucketName:bk,objectName:path,contentType:f.type||"application/octet-stream",cacheControl:"3600"},
+      onProgress:(a,b)=>onp&&onp(Math.round(a/b*100)),onError:rej,onSuccess:()=>res()});
+    u.findPreviousUploads().then(pr=>{if(pr.length)u.resumeFromPreviousUpload(pr[0]);u.start()});
+  });
+}
+async function up(pid,f,onp){
+  if(f.size>MAXB){alert(`حجم الملف ${(f.size/1048576).toFixed(0)}MB أكبر من الحد المسموح (5GB).`);return null}
+  const ext=(f.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"")||"bin",net=/load failed|network|fetch|timeout/i;
+  let path,error;
+  for(let i=0;i<3;i++){
+    path=`${pid}/${crypto.randomUUID()}.${ext}`;
+    try{
+      if(f.size>6*1048576)await tusUp("media",path,f,onp);
+      else{const r=await sb.storage.from("media").upload(path,f,{contentType:f.type||"application/octet-stream"});if(r.error)throw r.error}
+      error=null;break;
+    }catch(e){error=e;if(!net.test(e.message||String(e)))break;await new Promise(r=>setTimeout(r,1500))}
+  }
+  if(error){const m=error.message||String(error);alert("فشل الرفع: "+m+(/413|exceed|too large/i.test(m)?"\nحجم الملف أكبر من الحد المضبوط في Supabase. ارفع الحد من Storage ← Settings.":net.test(m)?"\nانقطع الاتصال أثناء الرفع. جرّب على Wi-Fi ثم أعد المحاولة.":""));return null}
   return path;
 }
 async function loadE(){
@@ -183,7 +213,7 @@ function render(){
   $("app").innerHTML=hd+'<div class="wrap">'+navHtml()+b+'</div>'+(S.modal||S.cred?modalHtml():"");
 }
 function card(p){
-  const u=S.urls[p.cover_path];
+  const u=cu(p);
   return `<div class="card ${ST[p.status][1]}" onclick="openP('${p.id}')"><div class="img" ${u?`style="background-image:url('${u}')"`:""}>${chip(p)}</div>
   <div class="body"><h4>${esc(p.name)}</h4><p>${esc(p.loc)}</p><div class="bar"><i style="width:${clamp(p.progress)}%"></i></div>
   <div class="row"><span>الإنجاز ${clamp(p.progress)}%</span><span>التسليم ${esc(p.due)||"-"}</span></div></div></div>`;
@@ -199,13 +229,13 @@ async function openP(id){S.cur=id;S.tab=firstTab();await loadE();await loadPW();
 async function setTab(k){S.tab=k;await loadE();render()}
 function fileHtml(e){
   const u=S.urls[e.file_path];if(!u)return"";const t=e.file_type||"";
-  if(t.startsWith("image"))return `<img src="${u}" loading="lazy" onclick="openImg(this.src)">`;
+  if(t.startsWith("image"))return `<img src="${tu(e.file_path)||u}" data-full="${u}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.full" onclick="openImg(this.dataset.full)">`;
   if(t.startsWith("video"))return `<video src="${u}" controls playsinline preload="metadata"></video>`;
   return `<p><a href="${u}" target="_blank" rel="noopener">📎 فتح الملف</a></p>`;
 }
 function proj(){
   const p=S.projects.find(x=>x.id===S.cur);if(!p){S.cur=null;return home()}
-  const T=TABS.filter(t=>has(t.see)),t=TABS.find(x=>x.k===S.tab),u=S.urls[p.cover_path];
+  const T=TABS.filter(t=>has(t.see)),t=TABS.find(x=>x.k===S.tab),u=cu(p);
   const det=`<div class="box det">
     <div><span>الحالة</span><b>${ST[p.status][0]}</b></div>
     <div><span>المهندس / الموظف المسؤول</span><b>${esc(p.employee_name)||"-"}</b></div>
@@ -213,7 +243,7 @@ function proj(){
     <div><span>تاريخ البداية</span><b>${esc(p.start_date)||"-"}</b></div>
     <div><span>تاريخ التسليم</span><b>${esc(p.due)||"-"}</b></div>
     ${!["employee","engineer"].includes(S.role)?`<div><span>السعر</span><b>${money(p.price)}</b></div>`:""}</div>`;
-  const acts=canEdit()?`<div class="acts"><button class="btn" onclick="modal('edit')">تعديل المشروع</button>${adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div>`:"";
+  const acts=canEdit()?`<div class="acts"><button class="btn" onclick="modal('edit')">تعديل المشروع</button><button class="btn alt" onclick="openRep('one')">📄 التقرير الشهري</button>${adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div>`:"";
   const items=S.entries.map(e=>`<div class="item"><div>${esc(e.body)}</div>${fileHtml(e)}<small>${esc(e.author_name)} · ${new Date(e.created_at).toLocaleDateString("ar")}</small>
   ${adm()?`<button class="sm del" onclick="delE('${e.id}')">حذف</button>`:""}</div>`).join("");
   const add=has(t.add)?`<textarea id="tx" rows="3" placeholder="${t.ph}"></textarea>${t.file?`<input id="fl" type="file" accept="${t.file}" ${t.multi?"multiple":""}>`:""}<button class="btn" id="bt" onclick="addE()">إضافة</button>`:"";
@@ -261,7 +291,7 @@ async function addE(){
   if(!fs.length)rows.push({...base,body,file_path:null,file_type:null});
   for(let i=0;i<fs.length;i++){
     $("bt").textContent=`جاري رفع ${i+1} من ${fs.length}...`;
-    const path=await up(S.cur,fs[i]);
+    const path=await up(S.cur,fs[i],pc=>{$("bt").textContent=`جاري رفع ${i+1} من ${fs.length} (${pc}%)`});
     if(path)rows.push({...base,body,file_path:path,file_type:fs[i].type});
   }
   if(!rows.length)return render();
@@ -341,7 +371,7 @@ function closeImg(){$("lb")?.remove()}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeImg()});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 /* ===== من نحن / حجز خدمة / الورش / جدول الأعمال ===== */
-Object.assign(S,{ws:[],pw:[],works:[],reqs:[],about:"",newReq:0});
+Object.assign(S,{ws:[],pw:[],works:[],reqs:[],about:"",newReq:0,th:{}});
 const SV=[{n:"تصميم",u:"م²",ph:"المساحة بالمتر المربع"},{n:"تنفيذ",f:1,h:"ادخل الملف المطلوب تنفيذه وسيتم إرسال السعر في أقرب وقت"},
 {n:"إشراف",u:"م³",ph:"الحجم بالمتر المكعب"},{n:"تأثيث",u:"م²",ph:"المساحة بالمتر المربع"},{n:"استشارة ميدانية"},{n:"هوية بصرية كاملة"},
 {n:"تطوير المشاريع",f:1,h:"ارفع المشروع أو المنتج وسيتم التواصل معكم من فريقنا المختص"},{n:"تسعير المشاريع"},{n:"تسويق"}];
@@ -353,6 +383,8 @@ function navHtml(){
   const L=[["about","من نحن"]];
   if(S.role==="client")L.push(["book","حجز خدمة"]);
   if(adm())L.push(["reqs","طلبات الخدمات"+(S.newReq?` (${S.newReq})`:"")],["ws","الورش"],["works","جدول الأعمال"],["acc","الحسابات"]);
+  if(adm())L.push(["rep","تقارير الشهر"]);
+  if(S.vapid&&!S.pushOn)L.push(["push","🔔 تفعيل الإشعارات"]);
   return `<div class="tabs" style="margin:0 0 14px">${L.map(x=>`<div class="tab" onclick="nav('${x[0]}')">${x[1]}</div>`).join("")}</div>`;
 }
 async function loadAbout(){const {data}=await sb.from("settings").select("value").eq("key","about").maybeSingle();S.about=data?.value||""}
@@ -360,8 +392,11 @@ async function loadWs(){const {data}=await sb.from("workshops").select("*").orde
 async function cntReq(){const {count}=await sb.from("service_requests").select("id",{count:"exact",head:true}).eq("status","new");S.newReq=count||0}
 async function loadPW(){S.pw=[];if(adm()&&S.cur){const {data}=await sb.from("project_workshops").select("workshop_id").eq("project_id",S.cur);S.pw=(data||[]).map(x=>x.workshop_id)}}
 async function nav(m){
+  if(m==="push")return enablePush();
+  if(m==="rep")return openRep("all");
   S.modal=m;S.cred=null;
   if(m==="ws")await loadWs();
+  if(m==="reqs"&&adm()){const {data:n}=await sb.from("notify_settings").select("value").eq("key","notify_to").maybeSingle();S.notifyTo=n?.value||""}
   if(m==="works"){const {data}=await sb.from("works").select("*").order("created_at");S.works=data||[]}
   if(m==="reqs"||m==="book"){
     const {data}=await sb.from("service_requests").select("*").order("created_at",{ascending:false});
@@ -392,15 +427,17 @@ function bookHtml(){
 async function sendReq(){
   const s=SV[$("bs").value],q=$("bq")?.value,ph=$("bp").value.trim(),f=$("bfl")?.files[0];
   if(s.u&&!(Number(q)>0))return alert("اكتب القيمة المطلوبة");
-  if(s.f&&!f)return alert("ارفع الملف المطلوب");
+  if(s.f&&!f)return alert("ارفع الملف المطلوب");if(f&&f.size>MAXB)return alert("حجم الملف أكبر من 5GB");
   if(ph.replace(/\D/g,"").length<8)return alert("اكتب رقم جوال صحيح للتواصل");
   const b=$("bb"),reset=()=>{b.disabled=false;b.textContent="إرسال الطلب"};
   b.disabled=true;b.textContent="جاري الإرسال...";
   let fp=null;
   if(f){
     const ext=(f.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"")||"bin";fp=`${S.user.id}/${crypto.randomUUID()}.${ext}`;
-    const {error}=await sb.storage.from("requests").upload(fp,f,{contentType:f.type||"application/octet-stream"});
-    if(error){reset();return alert("فشل رفع الملف: "+error.message)}
+    try{
+      if(f.size>6*1048576)await tusUp("requests",fp,f,pc=>{b.textContent=`جاري رفع الملف (${pc}%)`});
+      else{const r=await sb.storage.from("requests").upload(fp,f,{contentType:f.type||"application/octet-stream"});if(r.error)throw r.error}
+    }catch(e){reset();return alert("فشل رفع الملف: "+(e.message||e))}
   }
   const {error}=await sb.from("service_requests").insert({service:s.n,qty:s.u?Number(q):null,unit:s.u||null,notes:$("bn").value.trim()||null,phone:ph,file_path:fp,client_name:S.name});
   if(error){reset();return alert(error.message)}
@@ -409,10 +446,20 @@ async function sendReq(){
 /* طلبات الخدمات (المدير) */
 function reqsHtml(){
   return `<div class="modal"><div class="box"><h3>طلبات الخدمات (${S.reqs.length})</h3>${mclose}
+  <label class="lbl">بريد تنبيهات الطلبات الجديدة (افصل بين أكثر من بريد بفاصلة)</label>
+  <input id="nt" type="text" dir="ltr" inputmode="email" autocapitalize="none" placeholder="name@example.com" value="${esc(S.notifyTo)}">
+  <button class="btn" onclick="saveNotify()">حفظ البريد</button>
   ${S.reqs.map(r=>`<div class="item"><b>${esc(r.service)}</b>${r.qty?` · ${r.qty} ${esc(r.unit)}`:""}<br>العميل: ${esc(r.client_name)} · <a dir="ltr" href="${wa(r.phone)}" target="_blank" rel="noopener">${esc(r.phone)}</a>
   ${r.notes?`<div>${esc(r.notes)}</div>`:""}${r.file_path&&S.urls[r.file_path]?`<div><a href="${S.urls[r.file_path]}" target="_blank" rel="noopener">📎 فتح الملف</a></div>`:""}
   <small>${new Date(r.created_at).toLocaleString("ar")} · ${r.status==="done"?"تمت المعالجة":"جديد"}</small>
   <button class="sm" onclick="setReq('${r.id}','${r.status==="done"?"new":"done"}')">${r.status==="done"?"إعادة فتح":"تمت المعالجة"}</button> <button class="sm del" onclick="delReq('${r.id}')">حذف</button></div>`).join("")||'<div class="empty">لا توجد طلبات</div>'}</div></div>`;
+}
+async function saveNotify(){
+  const v=$("nt").value.split(",").map(x=>x.trim()).filter(Boolean);
+  if(v.some(x=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)))return alert("اكتب بريداً صحيحاً، وافصل بين أكثر من بريد بفاصلة");
+  const {error}=await sb.from("notify_settings").upsert({key:"notify_to",value:v.join(",")});
+  if(error)return alert("تعذر الحفظ: "+error.message);
+  S.notifyTo=v.join(",");alert("تم حفظ بريد التنبيهات ✅");
 }
 async function setReq(id,st){const {error}=await sb.from("service_requests").update({status:st}).eq("id",id);if(error)alert(error.message);await nav("reqs")}
 async function delReq(id){
@@ -455,7 +502,104 @@ async function addWork(){
   if(error)return alert(error.message);await nav("works");
 }
 async function delWork(id){if(!confirm("حذف؟"))return;await sb.from("works").delete().eq("id",id);await nav("works")}
-const NEWM={about:aboutHtml,book:bookHtml,reqs:reqsHtml,ws:wsHtml,works:worksHtml};
+/* ===== تحديثات مباشرة (Realtime) ===== */
+function toast(m){const d=document.createElement("div");d.textContent=m;d.style.cssText="position:fixed;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#44474a;color:#fff;padding:12px 20px;border-radius:12px;z-index:99;box-shadow:0 6px 20px #0006;max-width:90%;text-align:center";document.body.appendChild(d);setTimeout(()=>d.remove(),5000)}
+function startLive(){
+  S.rt=sb.channel("live")
+   .on("postgres_changes",{event:"INSERT",schema:"public",table:"service_requests"},p=>{if(!adm())return;S.newReq++;toast("🔔 طلب خدمة جديد: "+p.new.service);if(S.modal==="reqs")nav("reqs");else if(!document.activeElement?.closest?.(".modal"))render()})
+   .on("postgres_changes",{event:"INSERT",schema:"public",table:"entries"},async p=>{
+     const e=p.new;if(e.author_id===S.user.id)return;
+     if(S.cur&&e.project_id===S.cur&&e.kind===S.tab&&!S.modal&&!$("tx")?.value){await loadE();render()}
+     else toast("🆕 تحديث جديد في: "+(S.projects.find(x=>x.id===e.project_id)?.name||"مشروع"))})
+   .subscribe();
+}
+/* ===== إشعارات الجوال (Web Push) ===== */
+const pushOK=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+const b64u=s=>Uint8Array.from(atob((s+"=".repeat((4-s.length%4)%4)).replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+async function initPush(){
+  try{
+    const {data}=await sb.from("settings").select("value").eq("key","vapid_public").maybeSingle();S.vapid=data?.value||"";
+    if(S.vapid&&pushOK()&&Notification.permission==="granted"){const reg=await navigator.serviceWorker.ready;S.pushOn=!!(await reg.pushManager.getSubscription())}
+  }catch(e){}
+}
+async function enablePush(){
+  if(!pushOK())return alert(/iphone|ipad|ipod/i.test(navigator.userAgent)?"على الآيفون: ثبّت الموقع أولاً من زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من الأيقونة وفعّل الإشعارات.":"هذا المتصفح لا يدعم الإشعارات");
+  if(await Notification.requestPermission()!=="granted")return alert("لم يتم السماح بالإشعارات. فعّلها من إعدادات المتصفح للموقع.");
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const sub=(await reg.pushManager.getSubscription())||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(S.vapid)});
+    const j=sub.toJSON();
+    const {error}=await sb.from("push_subscriptions").upsert({user_id:S.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:"endpoint"});
+    if(error)throw error;
+    S.pushOn=true;toast("تم تفعيل الإشعارات ✅");render();
+  }catch(e){alert("تعذر تفعيل الإشعارات: "+(e.message||e))}
+}
+/* ===== التقرير الشهري PDF ===== */
+const MN=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const loadLib=src=>new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("تعذر تحميل "+src));document.head.appendChild(s)});
+function openRep(sc){S.repScope=sc;S.modal="rep";S.cred=null;render()}
+function repHtml(){
+  const now=new Date(),opts=[];
+  for(let i=0;i<6;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);opts.push(`<option value="${d.getFullYear()}-${d.getMonth()}">${MN[d.getMonth()]} ${d.getFullYear()}</option>`)}
+  const one=S.repScope==="one",p=S.projects.find(x=>x.id===S.cur);
+  return `<div class="modal"><div class="box"><h3>التقرير الشهري (PDF)</h3>
+  <p class="lbl">${one?"المشروع: "+esc(p?.name):`كل المشاريع قيد التنفيذ (${S.projects.filter(x=>x.status==="run").length}) — يُتخطّى المشروع الذي له تقرير لنفس الشهر`}</p>
+  <select id="rm">${opts.join("")}</select>
+  <p class="lbl">يُضاف التقرير إلى «التقارير والملفات» ويصل العميل والفريق إشعاراً.</p>
+  <button class="btn" id="rb" onclick="runReports()">إنشاء</button> ${mclose}</div></div>`;
+}
+async function runReports(){
+  const [y,m]=$("rm").value.split("-").map(Number),b=$("rb");
+  const list=S.repScope==="one"?S.projects.filter(x=>x.id===S.cur):S.projects.filter(x=>x.status==="run");
+  if(!list.length)return alert("لا توجد مشاريع");
+  b.disabled=true;let ok=0,skip=0;
+  try{
+    b.textContent="جاري تحميل المكتبات...";
+    await loadLib("html2canvas.min.js");await loadLib("jspdf.umd.min.js");
+    const title=`التقرير الشهري — ${MN[m]} ${y}`;
+    for(let i=0;i<list.length;i++){
+      const p=list[i];b.textContent=`جاري إنشاء تقرير ${i+1} من ${list.length}...`;
+      if(S.repScope==="all"){const {data}=await sb.from("entries").select("id").eq("project_id",p.id).eq("kind","reports").like("body",title+"%").limit(1);if(data?.length){skip++;continue}}
+      const blob=await buildPdf(p,y,m),path=await up(p.id,new File([blob],"report.pdf",{type:"application/pdf"}));
+      if(!path)continue;
+      const {error}=await sb.from("entries").insert({project_id:p.id,kind:"reports",body:`${title} — ${p.name}`,file_path:path,file_type:"application/pdf",author_name:"التقرير الشهري"});
+      if(error){alert(error.message);continue}ok++;
+    }
+  }catch(e){alert("تعذر إنشاء التقرير: "+(e.message||e))}
+  alert(`تم إنشاء ${ok} تقرير`+(skip?` وتخطي ${skip} (موجود مسبقاً)`:""));
+  S.modal=null;if(S.cur)await loadE();render();
+}
+async function buildPdf(p,y,m){
+  const st=new Date(y,m,1).toISOString(),en=new Date(y,m+1,1).toISOString();
+  const {data}=await sb.from("entries").select("*").eq("project_id",p.id).in("kind",["updates","reports"]).gte("created_at",st).lt("created_at",en).order("created_at");
+  const L=data||[],ups=L.filter(x=>x.kind==="updates"),imgs=L.filter(x=>x.file_path&&(x.file_type||"").startsWith("image")).slice(0,6);
+  let urls=[];if(imgs.length){const r=await sb.storage.from("media").createSignedUrls(imgs.map(x=>x.file_path),600);urls=(r.data||[]).map(x=>x.signedUrl).filter(Boolean)}
+  const t=timing(p),el=document.createElement("div");
+  el.style.cssText="position:fixed;left:-9999px;top:0;width:794px;background:#fff;color:#2b2d2f;padding:44px;box-sizing:border-box;direction:rtl;font-family:Tajawal,Tahoma,sans-serif;line-height:1.8";
+  const row=(a,v)=>`<tr><td style="padding:6px 10px;border:1px solid #ddd;background:#f4f4f4;width:30%">${a}</td><td style="padding:6px 10px;border:1px solid #ddd">${v}</td></tr>`;
+  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #545454;padding-bottom:12px;margin-bottom:18px"><div><div style="font-size:26px;font-weight:700">التقرير الشهري</div><div style="color:#6f7377">${MN[m]} ${y}</div></div><img src="logo.png" style="height:70px"></div>
+  <h2 style="margin:0 0 10px">${esc(p.name)}${p.loc?" — "+esc(p.loc):""}</h2>
+  <div style="background:#e6e6e6;border-radius:8px;height:16px;overflow:hidden"><div style="width:${clamp(p.progress)}%;height:100%;background:#55595e"></div></div>
+  <div style="margin:6px 0 16px">نسبة الإنجاز: <b>${clamp(p.progress)}%</b></div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:18px">${row("الحالة",ST[p.status][0])}${row("المهندس / المسؤول",esc(p.employee_name)||"-")}${row("تاريخ البداية",esc(p.start_date)||"-")}${row("تاريخ التسليم",esc(p.due)||"-")}${t?row("الموقف الزمني",t.t):""}</table>
+  <h3>أعمال الشهر (${ups.length})</h3>
+  ${ups.slice(0,20).map(x=>`<div style="border-bottom:1px solid #e2e2e2;padding:6px 0"><small style="color:#6f7377">${new Date(x.created_at).toLocaleDateString("ar")}</small><div>${esc(x.body)}</div></div>`).join("")||'<div style="color:#6f7377">لا توجد تحديثات مسجلة هذا الشهر.</div>'}
+  ${urls.length?`<h3 style="margin-top:18px">صور من الموقع</h3><div style="display:flex;flex-wrap:wrap;gap:8px">${urls.map(u=>`<img crossorigin="anonymous" src="${u}" style="width:236px;height:170px;object-fit:cover;border-radius:6px">`).join("")}</div>`:""}
+  <div style="margin-top:24px;color:#6f7377;font-size:13px;border-top:1px solid #ddd;padding-top:8px">أُنشئ بتاريخ ${new Date().toLocaleDateString("ar")} — بيوت</div>`;
+  document.body.appendChild(el);
+  try{
+    await Promise.all([...el.querySelectorAll("img")].map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r;setTimeout(r,8000)})));
+    const cv=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:"#fff"});
+    const doc=new window.jspdf.jsPDF("p","pt","a4"),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),ph=Math.floor(cv.width*H/W);
+    for(let y0=0,pg=0;y0<cv.height;y0+=ph,pg++){
+      const c=document.createElement("canvas");c.width=cv.width;c.height=Math.min(ph,cv.height-y0);
+      c.getContext("2d").drawImage(cv,0,y0,cv.width,c.height,0,0,cv.width,c.height);
+      if(pg)doc.addPage();doc.addImage(c.toDataURL("image/jpeg",.92),"JPEG",0,0,W,c.height*W/cv.width);
+    }
+    return doc.output("blob");
+  }finally{el.remove()}
+}
+const NEWM={rep:repHtml,about:aboutHtml,book:bookHtml,reqs:reqsHtml,ws:wsHtml,works:worksHtml};
 /* شريط تثبيت التطبيق: أندرويد (زر تثبيت) وآيفون (تعليمات) */
 let DP=null;const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
 function installBar(msg,btn=""){
