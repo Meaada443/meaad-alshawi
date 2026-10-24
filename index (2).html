@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>بيوت</title>
+<meta name="theme-color" content="#545454">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#545454;--bg:#f4f4f4;--text:#2b2d2f;--muted:#6f7377;--line:#bdbdbd}
+*{box-sizing:border-box}
+body{margin:0;font-family:Tajawal,Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+a{color:inherit;text-decoration:none}
+.hero{background:#707070 url(bg.jpg) center 88%/cover;color:#fff;text-align:center;padding:44px 20px 96px}
+.hero img{height:96px}
+.hero h1{margin:14px 0 4px;font-size:30px;font-weight:800}
+.hero p{margin:0;opacity:.85}
+.tiles{max-width:960px;margin:-52px auto 0;padding:0 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 12px;text-align:center;box-shadow:0 4px 14px #0002;transition:.2s}
+.tile:hover{transform:translateY(-3px);border-color:var(--navy)}
+.tile svg{width:40px;height:40px;stroke:var(--navy);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.tile b{display:block;font-size:19px;margin-top:8px}
+.tile small{display:block;color:var(--muted);direction:ltr}
+.panel{max-width:960px;margin:0 auto;padding:24px 16px}
+.panel[hidden],.tiles[hidden]{display:none}
+.back{display:inline-block;margin-bottom:14px;color:var(--navy);font-weight:700}
+.panel h2{margin:0 0 16px;color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+.ph{height:120px;border-radius:8px;background:#d9d9d9;display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:10px}
+.logo-ph{height:90px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:12px}
+.btn{display:inline-block;background:var(--navy);color:#fff;padding:10px 22px;border-radius:8px;font-weight:700;margin:0 0 10px 10px}
+#pm .box{max-width:420px;margin:0 auto}
+.login input{display:block;width:100%;padding:11px 12px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+.login .btn{border:0;cursor:pointer;font:inherit;font-weight:700}
+.msg{color:#b3473f;min-height:24px;font-size:14px}
+.rem{display:flex;gap:8px;align-items:center;margin:0 0 6px;color:var(--muted);font-size:14px}
+.login .rem input{display:inline-block;width:auto;margin:0}
+.pw{position:relative}.pw input{padding-left:46px}
+.eye{position:absolute;left:4px;top:0;bottom:10px;width:40px;background:none;border:0;padding:0;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.eye svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.prot{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.prot canvas{width:100%;display:block;border-radius:8px;background:#ddd;margin-bottom:8px;cursor:zoom-in}
+.hidecv .prot canvas{filter:blur(22px)}
+#lb{position:fixed;inset:0;background:#000d;z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:56px 12px 12px}
+#lb[hidden]{display:none}
+#lbp{width:100%;max-width:900px;max-height:100%;overflow:auto}
+#lbp canvas{cursor:default;margin:0 0 10px;width:100%}
+#lbx{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;z-index:21;background:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer}
+.svc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.svc button{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 8px;font:inherit;font-weight:700;color:var(--text);cursor:pointer;transition:.15s}
+.svc button:hover{border-color:var(--navy)}
+.svc button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#bform{display:none}#bform.show{display:block}
+#bform input,#bform textarea{display:block;width:100%;padding:11px 12px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+#bform .lbl{margin:0 0 10px;color:var(--muted);font-size:14px}
+#bform .btn{border:0;cursor:pointer;font:inherit;font-weight:700;margin:0}
+.empty{color:var(--muted);padding:20px;text-align:center;grid-column:1/-1}
+@media print{#projects,#lb{display:none!important}}
+footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
+@media(max-width:640px){.tiles{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:24px}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <a href="#" title="الرئيسية" style="display:inline-block;line-height:0"><img src="logo-white.png" alt="بيوت"></a>
+  <h1>بيوت</h1>
+  <p>اختر ما تحتاجه للبدء</p>
+</header>
+
+<main>
+<nav class="tiles" id="tiles">
+  <a class="tile" href="#about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><b>من نحن</b><small>About us</small></a>
+  <a class="tile" href="#book"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9l2 2 3-3M8 16h8"/></svg><b>اختر خدمة</b><small>Choose a service</small></a>
+  <a class="tile" href="#pm"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="13" rx="1"/></svg><b>إدارة المشاريع</b><small>Project management</small></a>
+  <a class="tile" href="#projects"><svg viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6M9 11h.01M15 11h.01"/></svg><b>مشاريعنا</b><small>Projects</small></a>
+  <a class="tile" href="#partners"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="4"/><circle cx="16" cy="12" r="4"/><path d="M3 20c1-3 3-4 6-4M13 20c.5-2 2-3 5-3"/></svg><b>شركاؤنا</b><small>Our partners</small></a>
+  <a class="tile" href="#support"><svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v5H4zM17 14h3v5h-3zM20 19c0 1.5-2 2-5 2"/></svg><b>الدعم</b><small>Support</small></a>
+</nav>
+
+<section class="panel" id="pm" hidden>
+  <a class="back" href="#">← الرئيسية</a>
+  <div class="box login">
+    <h2 style="margin:0 0 4px">دخول العملاء</h2>
+    <p style="margin:0 0 14px;color:var(--muted)">لمتابعة مشاريعك وحجز الخدمات</p>
+    <div id="cform">
+      <input id="cu" placeholder="اسم المستخدم" autocapitalize="none" dir="ltr" autocomplete="username">
+      <div class="pw"><input id="cp" type="password" placeholder="كلمة المرور" autocomplete="current-password"><button type="button" class="eye" id="ceye" aria-label="إظهار كلمة المرور"></button></div>
+      <label class="rem"><input type="checkbox" id="crem" checked> تذكّرني على هذا الجهاز</label>
+      <div class="msg" id="cmsg"></div>
+      <button class="btn" id="cbtn" type="button">دخول</button>
+    </div>
+    <div id="cin" hidden>
+      <p style="margin-top:0">أنت مسجّل دخول بالفعل.</p>
+      <a class="btn" href="pm.html">متابعة إلى حسابي</a>
+      <a href="#" id="cout" style="color:var(--muted)">تسجيل خروج</a>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="book" hidden>
+  <a class="back" href="#">← الرئيسية</a>
+  <h2>اختر خدمة</h2>
+  <div class="svc" id="svc"></div>
+  <div class="box" id="bform">
+    <h3 id="bt" style="margin:0 0 10px"></h3>
+    <div id="bextra"></div>
+    <input id="bname" placeholder="الاسم" autocomplete="name">
+    <input id="bphone" type="tel" dir="ltr" inputmode="tel" placeholder="رقم الجوال للتواصل" autocomplete="tel">
+    <textarea id="bnotes" rows="3" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+    <div class="msg" id="bmsg"></div>
+    <button class="btn" id="bsend" type="button">إرسال الطلب</button>
+    <div id="bok" hidden style="margin-top:14px"></div>
+  </div>
+</section>
+
+<section class="panel" id="about" hidden>
+  <a class="back" href="#">← الرئيسية</a>
+  <h2>من نحن</h2>
+  <div class="box"><div id="abouttxt" style="white-space:pre-wrap;line-height:1.9">جاري التحميل...</div></div>
+</section>
+
+<section class="panel" id="projects" hidden>
+  <a class="back" href="#">← الرئيسية</a>
+  <h2>مشاريعنا</h2>
+  <div class="grid" id="pgrid"><div class="empty">جاري التحميل...</div></div>
+</section>
+
+<section class="panel" id="partners" hidden>
+  <a class="back" href="#">← الرئيسية</a>
+  <h2>شركاؤنا</h2>
+  <!-- بدّل كل مربع بشعار الشريك: <img src="partner1.png" alt="اسم الشريك" style="max-height:60px;max-width:80%"> -->
+  <div class="grid">
+    <div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div>
+    <div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div>
+  </div>
+</section>
+
+<section class="panel" id="support" hidden>
+  <a class="back" href="#">← الرئيسية</a>
+  <h2>الدعم</h2>
+  <div class="box">
+    <p style="margin-top:0">نسعد بخدمتك، تواصل معنا بالطريقة الأنسب:</p>
+    <!-- غيّر الرقم والبريد قبل الرفع -->
+    <a class="btn" href="https://wa.me/966537723373" target="_blank" rel="noopener">واتساب</a>
+    <a class="btn" href="tel:+966537723373">اتصال</a>
+    <a class="btn" href="mailto:me3adalshawi@hotmail.com">البريد الإلكتروني</a>
+    <p style="margin-bottom:0;color:var(--muted)">أوقات الدعم: من الأحد إلى الخميس، 8 ص – 5 م</p>
+  </div>
+</section>
+</main>
+
+<div id="lb" class="prot" hidden><button id="lbx" aria-label="إغلاق">✕</button><div id="lbp"></div></div>
+
+<footer>© بيوت</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* "تذكّرني": إن لم يُفعَّل، تُحذف الجلسة عند إغلاق المتصفح */
+(function(){try{if(localStorage.getItem("sb_temp")==="1"&&!sessionStorage.getItem("sb_alive")){Object.keys(localStorage).filter(k=>/^sb-.*-auth-token/.test(k)).forEach(k=>localStorage.removeItem(k));localStorage.removeItem("sb_temp")}}catch(e){}})();
+const EYE='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYEOFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.5 6.9C3.7 8.6 2 12 2 12s3.5 7 10 7c1.6 0 3-.4 4.3-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+const SBU="https://nhtrghkgmxysesdoysix.supabase.co",SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5odHJnaGtnbXh5c2VzZG95c2l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5OTYzMTcsImV4cCI6MjEwNzU3MjMxN30.Y3Shg8quSz-kXjfQh4fbluWO7rRBJmgjr5IuwQIWgCM",UD="app.example.com";
+const P=["about","projects","partners","support","pm","book"],$=id=>document.getElementById(id);
+let sb=null,hasSession=false;
+try{sb=supabase.createClient(SBU,SBK)}catch(e){}
+/* نص "من نحن": هذا النص هو الافتراضي. وإن حُفظ نص آخر من النظام (إدارة المشاريع ← من نحن ← حفظ) فإنه يحلّ محله */
+const FALLBACK_ABOUT=`منذ عام ٢٠١٨، بدأت رحلتي في عالم التصميم الداخلي لصناعة مساحات تحمل روح أصحابها، وتجمع بين الجمال والراحة في كل التفاصيل.
+
+أنا ميعاد أحمد ، أؤمن أن التصميم الناجح لا يقتصر على جمال المكان، بل يحوّله إلى تجربة تشبهك وتعكس أسلوب حياتك. أرافقك من الفكرة الأولى حتى اكتمال التفاصيل، لأصنع لك مساحة تنبض بالأناقة، وتبقى قريبة منك كل يوم.`;
+async function loadAbout(){
+  const el=$("abouttxt");el.textContent=FALLBACK_ABOUT;
+  try{
+    const {data,error}=await sb.from("settings").select("value").eq("key","about").maybeSingle();
+    const v=!error&&data&&data.value&&data.value.trim();
+    if(v)el.textContent=v;
+  }catch(e){}
+}
+/* ===== مشاريعنا: عرض محمي (canvas + علامة مائية + منع الحفظ والنسخ) — يدعم PDF وصور ===== */
+let projLoaded=false,pdfReady=null,lbTok=0;
+const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+function draw(cv,bmp,maxW){
+  const k=Math.min(1,maxW/bmp.width);cv.width=Math.round(bmp.width*k);cv.height=Math.round(bmp.height*k);
+  const x=cv.getContext("2d");x.drawImage(bmp,0,0,cv.width,cv.height);
+  x.save();x.globalAlpha=.25;x.fillStyle="#fff";x.strokeStyle="#000";x.lineWidth=1;
+  x.font="bold "+Math.max(16,Math.round(cv.width/22))+"px Tajawal,Tahoma,sans-serif";x.rotate(-Math.PI/7);
+  const st=Math.max(90,cv.width/5);
+  for(let yy=-cv.height;yy<cv.height*2;yy+=st)for(let xx=-cv.width;xx<cv.width*2;xx+=st*1.6){x.fillText("بيوت",xx,yy);x.strokeText("بيوت",xx,yy)}
+  x.restore();
+}
+function pdfJs(){
+  return pdfReady||(pdfReady=new Promise((res,rej)=>{
+    if(window.pdfjsLib)return res();
+    const s=document.createElement("script");s.src=PDFJS+"pdf.min.js";
+    s.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js";res()};
+    s.onerror=()=>rej(new Error("pdfjs"));document.head.appendChild(s);
+  }));
+}
+async function pdfPage(pdf,n,w){
+  const pg=await pdf.getPage(n),v0=pg.getViewport({scale:1}),v=pg.getViewport({scale:Math.min(2,w/v0.width)});
+  const c=document.createElement("canvas");c.width=Math.round(v.width);c.height=Math.round(v.height);
+  const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);
+  await pg.render({canvasContext:x,viewport:v}).promise;return c;
+}
+function openLb(bmp){
+  lbTok++;const box=$("lbp");box.innerHTML="";const c=document.createElement("canvas");box.append(c);draw(c,bmp,1600);$("lb").hidden=false;
+}
+async function openPdf(pdf){
+  const tok=++lbTok,box=$("lbp");
+  box.innerHTML='<div class="empty" style="color:#fff">جاري التحميل...</div>';$("lb").hidden=false;
+  const n=Math.min(pdf.numPages,40);
+  for(let i=1;i<=n;i++){
+    const src=await pdfPage(pdf,i,1400);if(tok!==lbTok)return;
+    if(i===1)box.innerHTML="";
+    const c=document.createElement("canvas");box.append(c);draw(c,src,1400);
+  }
+}
+const noProj='<div class="empty">ستظهر مشاريعنا هنا قريبًا.</div>';
+async function loadProjects(){
+  const g=$("pgrid");
+  if(!sb){g.innerHTML=noProj;return}
+  try{
+    const {data:rows,error}=await sb.from("showcase").select("*").order("created_at",{ascending:false});
+    if(error||!rows||!rows.length){g.innerHTML=noProj;return}
+    const {data:urls}=await sb.storage.from("showcase").createSignedUrls(rows.map(r=>r.file_path),120);
+    const map={};(urls||[]).forEach(u=>{if(u.signedUrl)map[u.path]=u.signedUrl});
+    g.innerHTML="";
+    for(const r of rows){
+      const u=map[r.file_path];if(!u)continue;
+      const card=document.createElement("div");card.className="box prot";
+      const cv=document.createElement("canvas"),t=document.createElement("b"),n=document.createElement("div");
+      t.textContent=r.title;n.textContent=r.note||"";n.style.color="var(--muted)";
+      card.append(cv,t,n);g.append(card);
+      const fail=()=>{card.innerHTML='<div class="empty">تعذر تحميل الملف</div>'};
+      if(/\.pdf$/i.test(r.file_path)){
+        pdfJs().then(()=>fetch(u)).then(x=>x.arrayBuffer()).then(ab=>pdfjsLib.getDocument({data:ab}).promise).then(async pdf=>{
+          draw(cv,await pdfPage(pdf,1,900),900);
+          n.textContent=(r.note?r.note+" · ":"")+"ملف PDF · "+pdf.numPages+" صفحة";
+          cv.onclick=()=>openPdf(pdf);
+        }).catch(fail);
+      }else{
+        fetch(u).then(x=>x.blob()).then(b=>createImageBitmap(b)).then(bmp=>{draw(cv,bmp,900);cv.onclick=()=>openLb(bmp)}).catch(fail);
+      }
+    }
+    if(!g.children.length)g.innerHTML=noProj;
+  }catch(e){g.innerHTML=noProj}
+}
+const cvHide=v=>document.body.classList.toggle("hidecv",v);
+["contextmenu","dragstart","selectstart","copy","cut"].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest(".prot"))e.preventDefault()}));
+document.addEventListener("keydown",e=>{
+  if(e.key==="PrintScreen"){cvHide(true);try{navigator.clipboard.writeText("")}catch(_){}setTimeout(()=>cvHide(false),1500)}
+  if((e.ctrlKey||e.metaKey)&&["s","p"].includes(e.key.toLowerCase())&&(!$("projects").hidden||!$("lb").hidden))e.preventDefault();
+});
+document.addEventListener("keyup",e=>{if(e.key==="PrintScreen"){try{navigator.clipboard.writeText("")}catch(_){}}});
+addEventListener("blur",()=>cvHide(true));addEventListener("focus",()=>cvHide(false));
+document.addEventListener("visibilitychange",()=>cvHide(document.hidden));
+$("lb").onclick=e=>{if(e.target.id==="lb"||e.target.id==="lbx"){lbTok++;$("lb").hidden=true}};
+const msg=t=>$("cmsg").textContent=t;
+function show(){
+  const h=location.hash.slice(1),p=h,pan=P.includes(p);
+  if(h==="pm"&&hasSession){location.href="pm.html";return}
+  P.forEach(x=>$(x).hidden=x!==p);
+  $("tiles").hidden=pan;
+  if(p==="projects"&&!projLoaded){projLoaded=true;loadProjects()}
+  scrollTo(0,0);
+}
+async function clientLogin(){
+  if(!sb)return msg("تعذر الاتصال، حاول لاحقًا");
+  let em=$("cu").value.trim();if(!em)return msg("اكتب اسم المستخدم");
+  if(!em.includes("@"))em=em.toLowerCase()+"@"+UD;
+  $("cbtn").disabled=true;msg("");
+  const {data,error}=await sb.auth.signInWithPassword({email:em,password:$("cp").value});
+  if(error){$("cbtn").disabled=false;return msg("اسم المستخدم أو كلمة المرور غير صحيحة")}
+  const {data:p}=await sb.from("profiles").select("role").eq("id",data.user.id).maybeSingle();
+  if(p?.role!=="client"){
+    await sb.auth.signOut();$("cbtn").disabled=false;
+    return msg("هذا الدخول خاص بالعملاء فقط.");
+  }
+  try{
+    if($("crem").checked)localStorage.removeItem("sb_temp");else localStorage.setItem("sb_temp","1");
+    sessionStorage.setItem("sb_alive","1");
+  }catch(e){}
+  location.href="pm.html"+(location.hash==="#book"?"#book":"");
+}
+$("ceye").innerHTML=EYE;
+$("ceye").onclick=()=>{const i=$("cp"),s=i.type==="password";i.type=s?"text":"password";$("ceye").innerHTML=s?EYEOFF:EYE;$("ceye").setAttribute("aria-label",s?"إخفاء كلمة المرور":"إظهار كلمة المرور")};
+$("cbtn").onclick=clientLogin;
+$("cp").onkeydown=e=>{if(e.key==="Enter")clientLogin()};
+$("cout").onclick=async e=>{e.preventDefault();await sb.auth.signOut();location.reload()};
+if(sb)sb.auth.getSession().then(({data})=>{
+  hasSession=!!data.session;
+  if(hasSession){$("cform").hidden=true;$("cin").hidden=false;show()}
+});
+if(sb)loadAbout();else $("abouttxt").textContent=FALLBACK_ABOUT;
+/* ===== اختر خدمة: بدون تسجيل دخول، والطلب يُرسل إلى واتساب ===== */
+const NOTIFY_EMAIL="me3adalshawi@hotmail.com"; /* ← ضع إيميلك هنا: يصلك عليه تنبيه عند كل طلب */
+const WA_NUMBER="966537723373"; /* ← غيّره إلى رقم واتساب الخاص بك بصيغة دولية بدون + (مثال السعودية: 9665XXXXXXXX) */
+const SV=[{n:"تصميم",u:"م²",ph:"المساحة بالمتر المربع"},{n:"تنفيذ",f:1,h:"سيتم إرسال السعر في أقرب وقت. بعد فتح واتساب أرسل لنا الملف المطلوب تنفيذه في نفس المحادثة."},
+{n:"إشراف",u:"م³",ph:"الحجم بالمتر المكعب"},{n:"تأثيث",u:"م²",ph:"المساحة بالمتر المربع"},{n:"استشارة ميدانية"},{n:"هوية بصرية كاملة"},
+{n:"تطوير المشاريع",f:1,h:"بعد فتح واتساب أرسل لنا المشروع أو المنتج في نفس المحادثة وسيتواصل معكم فريقنا المختص."},{n:"تسعير المشاريع"},{n:"تسويق"}];
+let svI=-1;
+function pickSv(i){
+  svI=i;const s=SV[i];
+  document.querySelectorAll("#svc button").forEach((b,k)=>b.classList.toggle("on",k===i));
+  $("bt").textContent=s.n;$("bmsg").textContent="";
+  const ex=$("bextra");ex.innerHTML="";
+  if(s.h){const p=document.createElement("p");p.className="lbl";p.textContent=s.h;ex.append(p)}
+  if(s.u){const q=document.createElement("input");q.id="bq";q.type="number";q.min="0";q.step="any";q.inputMode="decimal";q.placeholder=s.ph+" ("+s.u+")";ex.append(q)}
+  $("bform").classList.add("show");$("bform").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+(function(){
+  const g=$("svc");
+  SV.forEach((s,i)=>{const b=document.createElement("button");b.type="button";b.textContent=s.n;b.onclick=()=>pickSv(i);g.append(b)});
+  $("bsend").onclick=async()=>{
+    const bm=t=>$("bmsg").textContent=t;
+    if(svI<0)return bm("اختر خدمة أولاً");
+    const s=SV[svI],q=$("bq")?$("bq").value:"",nm=$("bname").value.trim(),ph=$("bphone").value.trim(),nt=$("bnotes").value.trim();
+    if(!nm)return bm("اكتب اسمك");
+    if(ph.replace(/\D/g,"").length<8)return bm("اكتب رقم جوال صحيح للتواصل");
+    if(s.u&&!(Number(q)>0))return bm("اكتب "+s.ph);
+    let t="طلب خدمة جديد 🔔\nالخدمة: "+s.n+"\n";
+    if(s.u)t+=s.ph+": "+q+" "+s.u+"\n";
+    t+="الاسم: "+nm+"\nالجوال: "+ph;
+    if(nt)t+="\nالتفاصيل: "+nt;
+    if(s.f)t+="\n(سأرفق الملف هنا في المحادثة)";
+    bm("");
+    const wl=document.createElement("a");wl.className="btn";wl.target="_blank";wl.rel="noopener";wl.style.margin="0";
+    wl.href="https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(t);
+    const ok=$("bok"),bt=$("bsend");
+    bt.disabled=true;bt.textContent="جاري الإرسال...";
+    let sent=false;
+    try{
+      const r=await fetch("https://formsubmit.co/ajax/"+NOTIFY_EMAIL,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},
+        body:JSON.stringify({_subject:"طلب خدمة جديد: "+s.n,_template:"table",_captcha:"false",الخدمة:s.n,[s.u?s.ph:"الكمية"]:s.u?(q+" "+s.u):"-",الاسم:nm,الجوال:ph,التفاصيل:nt||"-"})});
+      const j=await r.json().catch(()=>({}));
+      sent=r.ok&&(j.success===true||j.success==="true");
+    }catch(e){}
+    bt.disabled=false;bt.textContent="إرسال الطلب";
+    ok.hidden=false;ok.innerHTML="";
+    const m=document.createElement("p");m.style.margin="0 0 10px";
+    if(sent){
+      m.style.color="#2e7d32";m.textContent="تم إرسال طلبك ✅ سنتواصل معك قريباً."+(s.f?" ولإرسال الملف المطلوب تابع عبر واتساب:":"");
+      ok.append(m);if(s.f){wl.textContent="إرسال الملف عبر واتساب";ok.append(wl)}
+    }else{
+      m.style.color="#b3473f";m.textContent="تعذر الإرسال تلقائياً، أرسل طلبك عبر واتساب:";
+      wl.textContent="إرسال عبر واتساب";ok.append(m,wl);
+    }
+  };
+})();
+addEventListener("hashchange",show);show();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
