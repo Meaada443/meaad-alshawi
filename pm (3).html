@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>بيوت | إدارة المشاريع</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#545454">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="بيوت">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="tus.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#545454;--bg:#737373;--card:#ececec;--text:#2b2d2f;--muted:#6f7377;--line:#bdbdbd;--run:#55595e;--late:#b3473f;--plan:#b7862b;--done:#4e8a5f}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Tajawal',Tahoma,sans-serif;background:var(--bg);color:var(--text)}
+input,select,textarea,button{font-family:inherit;font-size:15px}
+input,select,textarea{padding:10px;border:1px solid var(--line);border-radius:10px;width:100%;margin:4px 0 10px;background:#f7f7f7}
+:focus-visible{outline:3px solid #9ca3af;outline-offset:2px}
+.wrap{max-width:1200px;margin:auto;padding:20px}
+header{background:var(--navy);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header h1{margin:0;font-size:19px}.hb{display:flex;gap:8px;align-items:center}.rl{font-size:13px;opacity:.85}
+.sm{background:#ffffff26;color:#fff;border:0;padding:6px 14px;border-radius:8px;cursor:pointer}
+.sm.del{background:#fee2e2;color:var(--late);margin-top:6px}
+.btn{background:var(--run);color:#fff;border:0;padding:11px 22px;border-radius:10px;cursor:pointer;font-weight:700;margin:4px 0}
+.btn:disabled{opacity:.6;cursor:wait}.btn.alt{background:#8a8d90}.btn.danger{background:var(--late)}
+.back{background:none;border:0;color:var(--run);font-weight:700;cursor:pointer;padding:0 0 12px}
+.s-run{--c:var(--run)}.s-plan{--c:var(--plan)}.s-done{--c:var(--done)}
+.top{display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px}.top h2{margin:0;font-size:22px}
+/* الأعمدة الثلاثة */
+.cols{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+.col{background:#e9eef5;border-radius:18px;padding:12px;border-top:6px solid var(--c)}
+.col h3{margin:4px 4px 12px;display:flex;justify-content:space-between;align-items:center;font-size:18px}
+.col h3 b{background:var(--c);color:#fff;border-radius:20px;padding:0 12px;font-size:15px}
+.card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 4px 14px #54545414;cursor:pointer;margin-bottom:12px}
+.img{height:170px;background:linear-gradient(135deg,#e2e2e2,#bcbcbc) center/cover;position:relative}
+.cw{position:absolute;top:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;color:#fff}
+.chip.ty{background:#334155}
+.wa{background:#25d366;color:#fff;border-radius:10px;padding:11px 18px;text-decoration:none;font-weight:700;font-size:15px}
+.chip.ok{background:var(--done)}.chip.late{background:var(--late)}
+.body{padding:14px}.body h4{margin:0 0 2px;font-size:19px}.body p{margin:0;color:var(--muted)}
+.bar{height:8px;background:var(--line);border-radius:8px;margin:12px 0 6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--c)}
+.row{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+/* صفحة المشروع */
+.banner{height:280px;border-radius:18px;background:linear-gradient(135deg,#e2e2e2,#bcbcbc) center/cover;position:relative}
+.box{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 4px 14px #54545410}
+.det{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:14px 0}
+.det span{display:block;font-size:13px;color:var(--muted)}.det b{font-size:17px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.tabs{display:flex;gap:8px;overflow-x:auto;margin:18px 0}
+.tab{white-space:nowrap;background:var(--card);border:1px solid var(--line);padding:9px 18px;border-radius:24px;cursor:pointer;font-weight:500}
+.tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.lbl{font-size:13px;color:var(--muted)}
+.item{border-bottom:1px solid var(--line);padding:12px 0}.item small{color:var(--muted);display:block;margin-top:6px}
+.item img,.item video{width:100%;max-height:420px;object-fit:cover;border-radius:12px;margin-top:8px}
+.item img{cursor:zoom-in}
+.vis{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px;color:var(--muted)}.vis input{width:auto;margin:0}.vtag{display:inline-block;margin-top:8px;font-size:13px;padding:2px 10px;border-radius:20px;background:#eee;color:var(--muted)}.vtag.on{background:#e3f1e4;color:#2e7d32}
+.lb{position:fixed;inset:0;background:#000d;z-index:99;display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+.lb img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.lbx{position:absolute;top:14px;left:14px;background:#ffffff33;color:#fff;border:0;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer}
+.note,.empty{text-align:center;color:var(--muted);padding:22px}
+.login{max-width:380px;margin:50px auto}.msg{color:var(--late);font-size:14px;min-height:20px}
+.modal{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .box{width:100%;max-width:440px;max-height:92vh;overflow:auto}
+.link{white-space:pre-wrap;background:#f0f0f0;padding:10px;border-radius:10px;word-break:break-all;font-size:13px;direction:ltr;text-align:left}
+@media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr)}}
+/* ===== الخلفية والشعار ===== */
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:url(bg.jpg) center bottom/cover no-repeat;pointer-events:none}
+.col{background:#0000002e}.col h3,.top h2,.back{color:#fff}.col .empty{color:#e8e8e8}.wrap>.row{color:#f0f0f0}
+.lg{height:42px;width:auto;vertical-align:middle;margin-inline-start:10px}
+.loginlg{display:block;margin:0 auto 12px;height:130px;width:auto}
+.tb{width:100%;border-collapse:collapse}.tb th,.tb td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;font-size:14px}
+/* ===== توافق الجوال (آيفون وأندرويد) ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{-webkit-tap-highlight-color:transparent;padding-bottom:env(safe-area-inset-bottom);overflow-x:hidden}
+input,select,textarea{font-size:16px;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,#64748b 50%),linear-gradient(135deg,#64748b 50%,transparent 50%);background-position:16px 50%,22px 50%;background-size:6px 6px;background-repeat:no-repeat;padding-inline-start:36px}
+header{padding-top:max(14px,env(safe-area-inset-top));padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+.btn,.tab,.wa{min-height:44px;touch-action:manipulation}.sm{min-height:38px;touch-action:manipulation}
+.modal{padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+.modal .box{max-height:90vh;max-height:90dvh;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.tabs{-webkit-overflow-scrolling:touch;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.item img,.item video{max-width:100%}
+@media(max-width:600px){.wrap{padding:14px}.banner{height:200px}.img{height:150px}.top h2{font-size:19px}.det{grid-template-columns:repeat(2,1fr)}header h1{font-size:17px}.modal .box{padding:16px}}
+.pwb{position:relative}.pwb input{padding-left:46px}
+.eye{position:absolute;left:4px;top:4px;bottom:10px;width:40px;background:none;border:0;padding:0;cursor:pointer;color:#6f7377;display:flex;align-items:center;justify-content:center}
+.eye svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div id="app"><div class="note">جاري التحميل...</div></div>
+<script>
+/* ===== الإعدادات (غيّرها لمشروع Supabase الخاص بصديقك) ===== */
+/* "تذكّرني": إن لم يُفعَّل، تُحذف الجلسة عند إغلاق المتصفح */
+(function(){try{if(localStorage.getItem("sb_temp")==="1"&&!sessionStorage.getItem("sb_alive")){Object.keys(localStorage).filter(k=>/^sb-.*-auth-token/.test(k)).forEach(k=>localStorage.removeItem(k));localStorage.removeItem("sb_temp")}}catch(e){}})();
+const EYE='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYEOFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.5 6.9C3.7 8.6 2 12 2 12s3.5 7 10 7c1.6 0 3-.4 4.3-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+function togglePw(b){const i=b.previousElementSibling,s=i.type==="password";i.type=s?"text":"password";b.innerHTML=s?EYEOFF:EYE;b.setAttribute("aria-label",s?"إخفاء كلمة المرور":"إظهار كلمة المرور")}
+const DEFAULT_ABOUT=`منذ عام ٢٠١٨، بدأت رحلتي في عالم التصميم الداخلي لصناعة مساحات تحمل روح أصحابها، وتجمع بين الجمال والراحة في كل التفاصيل.
+
+أنا ميعاد أحمد ، أؤمن أن التصميم الناجح لا يقتصر على جمال المكان، بل يحوّله إلى تجربة تشبهك وتعكس أسلوب حياتك. أرافقك من الفكرة الأولى حتى اكتمال التفاصيل، لأصنع لك مساحة تنبض بالأناقة، وتبقى قريبة منك كل يوم.`;
+const SBU="https://nhtrghkgmxysesdoysix.supabase.co",SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5odHJnaGtnbXh5c2VzZG95c2l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5OTYzMTcsImV4cCI6MjEwNzU3MjMxN30.Y3Shg8quSz-kXjfQh4fbluWO7rRBJmgjr5IuwQIWgCM";
+const UD="app.example.com";   // نطاق داخلي لاسم المستخدم، لازم يطابق ما تكتبه عند إنشاء المدير
+const sb=supabase.createClient(SBU,SBK);
+const sb2=supabase.createClient(SBU,SBK,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+const ROLES={admin:"مدير الشركة",employee:"موظف",engineer:"مهندس",client:"عميل"};
+const ST={plan:["التصميم","s-plan"],run:["قيد التنفيذ","s-run"],done:["تم التسليم","s-done"]};
+/* see = من يشاهد ، add = من يضيف ، الحذف للمدير فقط */
+const TABS=[
+{k:"updates",n:"التحديثات والصور",see:"admin,employee,engineer,client",add:"admin,employee,engineer",ph:"اكتب تحديثاً عن سير العمل...",file:"image/*,video/*",multi:1},
+{k:"reports",n:"التقارير والملفات",see:"admin,employee,engineer,client",add:"admin,employee,engineer",ph:"عنوان التقرير وملخصه...",file:"*/*"},
+{k:"messages",n:"المراسلات",see:"admin,employee,engineer,client",add:"admin,employee,engineer,client",ph:"اكتب رسالة..."},
+{k:"internal",n:"ملاحظات داخلية",see:"admin,employee,engineer",add:"admin,employee,engineer",ph:"ملاحظة داخلية (لا يراها العميل)..."}];
+let S={user:null,role:"none",name:"",projects:[],members:[],cur:null,tab:"updates",entries:[],urls:{},modal:null,cred:null,solo:false};
+const has=(l,r=S.role)=>l.split(",").includes(r);
+const $=id=>document.getElementById(id);
+const clamp=v=>Math.max(0,Math.min(100,parseInt(v)||0));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=v=>v==null||v===""?"-":Number(v).toLocaleString("en-US");
+const adm=()=>S.role==="admin",canEdit=()=>["admin","employee","engineer"].includes(S.role);
+const firstTab=()=>TABS.find(t=>has(t.see)).k;
+function timing(p){
+  if(p.status==="done"||!p.due)return null;
+  const d=Math.round((new Date(p.due+"T00:00:00")-new Date().setHours(0,0,0,0))/864e5);
+  return d<0?{late:1,t:`متأخر ${-d} يوم`}:{late:0,t:d===0?"التسليم اليوم":`على الموعد · باقي ${d} يوم`};
+}
+const chip=p=>{const t=timing(p);return t?`<div class="cw"><span class="chip ${t.late?"late":"ok"}">${t.t}</span></div>`:""};
+
+/* ===== الدخول ===== */
+async function init(){
+  const {data}=await sb.auth.getSession();
+  S.user=data.session?.user||null;S.user?boot():loginView();
+}
+function loginView(msg=""){
+  $("app").innerHTML=`<div class="login box"><a href="index.html" title="الرئيسية" style="display:block;text-align:center;line-height:0"><img class="loginlg" src="logo.png" alt="بيوت"></a><h2 style="text-align:center">تسجيل الدخول</h2>
+  <input id="em" placeholder="اسم المستخدم أو البريد الإلكتروني" autocapitalize="none" dir="ltr">
+  <div class="pwb"><input id="pw" type="password" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')signIn()"><button type="button" class="eye" aria-label="إظهار كلمة المرور" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+  <div class="msg">${msg}</div><button class="btn" onclick="signIn()">دخول</button><p style="text-align:center"><a href="index.html">← الرئيسية</a></p></div>`;
+}
+async function signIn(){
+  let em=$("em").value.trim();if(!em.includes("@"))em=em.toLowerCase()+"@"+UD;
+  const {data,error}=await sb.auth.signInWithPassword({email:em,password:$("pw").value});
+  if(error)return loginView("اسم المستخدم أو كلمة المرور غير صحيحة");
+  S.user=data.user;boot();
+}
+async function out(){
+  try{const reg=await navigator.serviceWorker.ready,s=await reg.pushManager.getSubscription();if(s)await sb.from("push_subscriptions").delete().eq("endpoint",s.endpoint)}catch(e){}
+  await sb.auth.signOut();location.reload()
+}
+async function boot(){
+  const {data:p}=await sb.from("profiles").select("role,name").eq("id",S.user.id).maybeSingle();
+  S.role=p?.role||"none";S.name=p?.name||"";
+  if(adm())await Promise.all([loadMembers(),loadWs(),cntReq()]);
+  await loadAbout();await initPush();await load();
+  if(!S.rt)startLive();
+  const h=location.hash.slice(1);
+  if(h==="about"||(h==="book"&&S.role==="client"))nav(h);
+}
+async function loadMembers(){
+  const {data}=await sb.from("profiles").select("*").in("role",["employee","engineer","client"]).order("created_at");
+  S.members=data||[];
+}
+
+/* ===== البيانات ===== */
+async function load(){
+  const {data,error}=await sb.from("projects").select("*").order("created_at",{ascending:false});
+  if(error)alert("تعذر تحميل المشاريع: "+error.message);
+  S.projects=data||[];
+  S.solo=!adm()&&S.projects.length===1;   // العميل/الموظف عنده مشروع واحد: يفتح مباشرة
+  await sign(S.projects.map(p=>p.cover_path));
+  if(S.solo){S.cur=S.projects[0].id;if(!has(TABS.find(t=>t.k===S.tab).see))S.tab=firstTab();await loadE()}
+  render();
+}
+async function sign(paths,bk="media"){
+  const need=[...new Set(paths.filter(x=>x&&!S.urls[x]))];if(!need.length)return;
+  const {data}=await sb.storage.from(bk).createSignedUrls(need,7200);
+  (data||[]).forEach(d=>{if(d.signedUrl)S.urls[d.path]=d.signedUrl});
+  if(bk!=="media"||S.thOk===false)return;
+  const imgs=need.filter(x=>/\.(jpe?g|png|webp)$/i.test(x));
+  await Promise.all(imgs.map(async x=>{try{const {data:t}=await sb.storage.from(bk).createSignedUrl(x,7200,{transform:{width:800,quality:70}});if(t?.signedUrl)S.th[x]=t.signedUrl}catch(e){}}));
+  if(S.thOk===undefined&&imgs.length&&S.th[imgs[0]]){S.thOk=await fetch(S.th[imgs[0]],{method:"HEAD"}).then(r=>r.ok).catch(()=>false);if(!S.thOk)S.th={}}
+}
+const tu=x=>S.thOk?S.th[x]:null,cu=p=>tu(p.cover_path)||S.urls[p.cover_path];
+const MAXB=5*1024*1048576;
+function tusUp(bk,path,f,onp){
+  return new Promise(async(res,rej)=>{
+    const {data}=await sb.auth.getSession();
+    const u=new tus.Upload(f,{endpoint:SBU.replace(".supabase.co",".storage.supabase.co")+"/storage/v1/upload/resumable",
+      retryDelays:[0,2000,5000,10000,20000],headers:{authorization:"Bearer "+data.session.access_token,"x-upsert":"false"},
+      uploadDataDuringCreation:true,removeFingerprintOnSuccess:true,chunkSize:6*1048576,
+      metadata:{bucketName:bk,objectName:path,contentType:f.type||"application/octet-stream",cacheControl:"3600"},
+      onProgress:(a,b)=>onp&&onp(Math.round(a/b*100)),onError:rej,onSuccess:()=>res()});
+    u.findPreviousUploads().then(pr=>{if(pr.length)u.resumeFromPreviousUpload(pr[0]);u.start()});
+  });
+}
+async function up(pid,f,onp){
+  if(f.size>MAXB){alert(`حجم الملف ${(f.size/1048576).toFixed(0)}MB أكبر من الحد المسموح (5GB).`);return null}
+  const ext=(f.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"")||"bin",net=/load failed|network|fetch|timeout/i;
+  let path,error;
+  for(let i=0;i<3;i++){
+    path=`${pid}/${crypto.randomUUID()}.${ext}`;
+    try{
+      if(f.size>6*1048576)await tusUp("media",path,f,onp);
+      else{const r=await sb.storage.from("media").upload(path,f,{contentType:f.type||"application/octet-stream"});if(r.error)throw r.error}
+      error=null;break;
+    }catch(e){error=e;if(!net.test(e.message||String(e)))break;await new Promise(r=>setTimeout(r,1500))}
+  }
+  if(error){const m=error.message||String(error);alert("فشل الرفع: "+m+(/413|exceed|too large/i.test(m)?"\nحجم الملف أكبر من الحد المضبوط في Supabase. ارفع الحد من Storage ← Settings.":net.test(m)?"\nانقطع الاتصال أثناء الرفع. جرّب على Wi-Fi ثم أعد المحاولة.":""));return null}
+  return path;
+}
+async function loadE(){
+  const {data}=await sb.from("entries").select("*").eq("project_id",S.cur).eq("kind",S.tab).order("created_at",{ascending:false});
+  S.entries=data||[];await sign(S.entries.map(e=>e.file_path));
+}
+
+/* ===== العرض ===== */
+function render(){
+  const hd=`<header><h1><a href="index.html" title="الرئيسية" style="display:inline-block;line-height:0"><img class="lg" src="logo-white.png" alt="بيوت"></a></h1><div class="hb"><span class="rl">${esc(S.name)} · ${ROLES[S.role]||""}</span>
+  <button class="sm" onclick="location.href='index.html'">الرئيسية</button> <button class="sm" onclick="out()">خروج</button></div></header>`;
+  const b=S.role==="none"?'<div class="box note">حسابك بدون صلاحيات، تواصل مع مدير الشركة.</div>':S.cur?proj():home();
+  $("app").innerHTML=hd+'<div class="wrap">'+navHtml()+b+'</div>'+(S.modal||S.cred?modalHtml():"");
+}
+function card(p){
+  const u=cu(p);
+  return `<div class="card ${ST[p.status][1]}" onclick="openP('${p.id}')"><div class="img" ${u?`style="background-image:url('${u}')"`:""}>${chip(p)}</div>
+  <div class="body"><h4>${esc(p.name)}</h4><p>${esc(p.loc)}</p><div class="bar"><i style="width:${clamp(p.progress)}%"></i></div>
+  <div class="row"><span>الإنجاز ${clamp(p.progress)}%</span><span>التسليم ${esc(p.due)||"-"}</span></div></div></div>`;
+}
+function home(){
+  const cols=Object.keys(ST).map(k=>{
+    const L=S.projects.filter(p=>p.status===k);
+    return `<section class="col ${ST[k][1]}"><h3>${ST[k][0]}<b>${L.length}</b></h3>${L.map(card).join("")||'<div class="empty">لا توجد مشاريع</div>'}</section>`;
+  }).join("");
+  return `<div class="top"><h2>المشاريع</h2>${adm()?`<button class="btn" onclick="modal('new')">＋ مشروع جديد</button>`:""}</div><div class="cols">${cols}</div>`;
+}
+async function openP(id){S.cur=id;S.tab=firstTab();await loadE();await loadPW();render();scrollTo(0,0)}
+async function setTab(k){S.tab=k;await loadE();render()}
+function fileHtml(e){
+  const u=S.urls[e.file_path];if(!u)return"";const t=e.file_type||"";
+  if(t.startsWith("image"))return `<img src="${tu(e.file_path)||u}" data-full="${u}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.full" onclick="openImg(this.dataset.full)">`;
+  if(t.startsWith("video"))return `<video src="${u}" controls playsinline preload="metadata"></video>`;
+  return `<p><a href="${u}" target="_blank" rel="noopener">📎 فتح الملف</a></p>`;
+}
+function proj(){
+  const p=S.projects.find(x=>x.id===S.cur);if(!p){S.cur=null;return home()}
+  const T=TABS.filter(t=>has(t.see)),t=TABS.find(x=>x.k===S.tab),u=cu(p);
+  const det=`<div class="box det">
+    <div><span>الحالة</span><b>${ST[p.status][0]}</b></div>
+    <div><span>المهندس / الموظف المسؤول</span><b>${esc(p.employee_name)||"-"}</b></div>
+    <div><span>العميل</span><b>${esc(p.client_name)||"-"}</b></div>
+    <div><span>تاريخ البداية</span><b>${esc(p.start_date)||"-"}</b></div>
+    <div><span>تاريخ التسليم</span><b>${esc(p.due)||"-"}</b></div>
+    ${!["employee","engineer"].includes(S.role)?`<div><span>السعر</span><b>${money(p.price)}</b></div>`:""}</div>`;
+  const acts=canEdit()?`<div class="acts"><button class="btn" onclick="modal('edit')">تعديل المشروع</button><button class="btn alt" onclick="openRep('one')">📄 التقرير الشهري</button>${adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div>`:"";
+  const canVis=["admin","employee"].includes(S.role);
+  const visUi=e=>S.tab!=="reports"||S.role==="client"?"":canVis?`<label class="vis"><input type="checkbox" ${e.client_visible?"checked":""} onchange="setVis('${e.id}',this.checked)"> إظهار للعميل</label>`:`<span class="vtag ${e.client_visible?"on":""}">${e.client_visible?"ظاهر للعميل":"غير ظاهر للعميل"}</span>`;
+  const items=S.entries.map(e=>`<div class="item"><div>${esc(e.body)}</div>${fileHtml(e)}${visUi(e)}<small>${esc(e.author_name)} · ${new Date(e.created_at).toLocaleDateString("ar")}</small>
+  ${adm()?`<button class="sm del" onclick="delE('${e.id}')">حذف</button>`:""}</div>`).join("");
+  const add=has(t.add)?`<textarea id="tx" rows="3" placeholder="${t.ph}"></textarea>${t.file?`<input id="fl" type="file" accept="${t.file}" ${t.multi?"multiple":""}>`:""}${t.k==="reports"&&canVis?'<label class="vis"><input type="checkbox" id="cv"> إظهار للعميل</label>':""}<button class="btn" id="bt" onclick="addE()">إضافة</button>`:"";
+  return `${S.solo?"":'<button class="back" onclick="S.cur=null;render()">← كل المشاريع</button>'}
+  <div class="banner ${ST[p.status][1]}" ${u?`style="background-image:url('${u}')"`:""}>${chip(p)}</div>
+  <div class="top" style="margin-top:16px"><h2>${esc(p.name)}${p.loc?" · "+esc(p.loc):""}</h2></div>
+  <div class="bar ${ST[p.status][1]}"><i style="width:${clamp(p.progress)}%"></i></div><div class="row"><span>الإنجاز ${clamp(p.progress)}%</span></div>
+  ${det}${acts}${adm()?pwBox():""}
+  <div class="tabs">${T.map(x=>`<div class="tab ${x.k===S.tab?"on":""}" onclick="setTab('${x.k}')">${x.n}</div>`).join("")}</div>
+  <div class="box">${add}${items||'<div class="empty">لا يوجد شيء بعد</div>'}</div>`;
+}
+
+/* ===== العمليات ===== */
+async function saveProj(){
+  const name=$("mn").value.trim();if(!name)return alert("اكتب اسم المشروع");
+  const s=$("mb").value,d=$("md").value;if(s&&d&&d<s)return alert("تاريخ التسليم قبل تاريخ البداية");
+  const row={name,loc:$("ml").value.trim(),status:$("ms").value,progress:clamp($("mp").value),start_date:s||null,due:d||null};
+  if(adm()){
+    const e=$("me").value,c=$("mcl").value,nm=id=>S.members.find(m=>m.id===id)?.name||null;
+    Object.assign(row,{employee_id:e||null,employee_name:nm(e),client_id:c||null,client_name:nm(c),price:$("mpr").value===""?null:Number($("mpr").value)});
+  }
+  $("mbtn").disabled=true;$("mbtn").textContent="جاري الحفظ...";
+  const q=S.modal==="edit"?sb.from("projects").update(row).eq("id",S.cur):sb.from("projects").insert(row);
+  const {data,error}=await q.select().single();
+  if(error){alert(error.message);$("mbtn").disabled=false;$("mbtn").textContent="حفظ";return}
+  const f=$("mc").files[0];
+  if(f){const path=await up(data.id,f);if(path)await sb.from("projects").update({cover_path:path}).eq("id",data.id)}
+  S.modal=null;await load();
+}
+async function delProj(){
+  if(!confirm("حذف المشروع وكل ما فيه؟"))return;
+  const {data:es}=await sb.from("entries").select("file_path").eq("project_id",S.cur);
+  const paths=(es||[]).map(e=>e.file_path).filter(Boolean);
+  const cp=S.projects.find(x=>x.id===S.cur)?.cover_path;if(cp)paths.push(cp);
+  if(paths.length)await sb.storage.from("media").remove(paths);
+  const {error}=await sb.from("projects").delete().eq("id",S.cur);
+  if(error)return alert(error.message);
+  S.cur=null;S.modal=null;await load();
+}
+async function addE(){
+  const body=$("tx").value.trim(),fs=[...($("fl")?.files||[])];
+  if(!body&&!fs.length)return;
+  $("bt").disabled=true;
+  const base={project_id:S.cur,kind:S.tab,author_name:(S.name||"")+" · "+ROLES[S.role],client_visible:S.tab==="reports"?!!$("cv")?.checked:true},rows=[];
+  if(!fs.length)rows.push({...base,body,file_path:null,file_type:null});
+  for(let i=0;i<fs.length;i++){
+    $("bt").textContent=`جاري رفع ${i+1} من ${fs.length}...`;
+    const path=await up(S.cur,fs[i],pc=>{$("bt").textContent=`جاري رفع ${i+1} من ${fs.length} (${pc}%)`});
+    if(path)rows.push({...base,body,file_path:path,file_type:fs[i].type});
+  }
+  if(!rows.length)return render();
+  const {error}=await sb.from("entries").insert(rows);
+  if(error)alert(error.message);
+  await loadE();render();
+}
+async function delE(id){
+  if(!confirm("حذف؟"))return;
+  const e=S.entries.find(x=>x.id===id);
+  if(e?.file_path)await sb.storage.from("media").remove([e.file_path]);
+  await sb.from("entries").delete().eq("id",id);await loadE();render();
+}
+
+async function setVis(id,v){
+  const {error}=await sb.from("entries").update({client_visible:v}).eq("id",id);
+  if(error){alert(error.message);await loadE();render();return}
+  const e=S.entries.find(x=>x.id===id);if(e)e.client_visible=v;
+}
+
+/* ===== النوافذ والحسابات ===== */
+function modal(m){S.modal=m;S.cred=null;render()}
+const opts=(role,sel)=>'<option value="">— غير محدد —</option>'+S.members.filter(m=>[].concat(role).includes(m.role)).map(m=>`<option value="${m.id}" ${m.id===sel?"selected":""}>${esc(m.name)} · ${ROLES[m.role]}</option>`).join("");
+function projForm(p){
+  const edit=S.modal==="edit";
+  return `<div class="modal"><div class="box"><h3>${edit?"تعديل المشروع":"مشروع جديد"}</h3>
+  <input id="mn" placeholder="اسم المشروع" value="${esc(p.name)}"><input id="ml" placeholder="الموقع / المدينة" value="${esc(p.loc)}">
+  ${adm()?`<label class="lbl">المهندس / الموظف المسؤول</label><select id="me">${opts(["employee","engineer"],p.employee_id)}</select>
+  <label class="lbl">العميل</label><select id="mcl">${opts("client",p.client_id)}</select>`:""}
+  <select id="ms">${Object.keys(ST).map(k=>`<option value="${k}" ${k===p.status?"selected":""}>${ST[k][0]}</option>`).join("")}</select>
+  <label class="lbl">نسبة الإنجاز %</label><input id="mp" type="number" min="0" max="100" value="${clamp(p.progress)}">
+  <label class="lbl">تاريخ البداية</label><input id="mb" type="date" value="${esc(p.start_date)}">
+  <label class="lbl">تاريخ التسليم</label><input id="md" type="date" value="${esc(p.due)}">
+  ${adm()?`<label class="lbl">السعر</label><input id="mpr" type="number" min="0" step="any" value="${esc(p.price)}">`:""}
+  <label class="lbl">صورة الغلاف</label><input id="mc" type="file" accept="image/*">
+  <button class="btn" id="mbtn" onclick="saveProj()">حفظ</button> <button class="btn alt" onclick="modal(null)">إلغاء</button>
+  ${edit&&adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div></div>`;
+}
+function modalHtml(){
+  const m=S.modal;
+  if(S.cred)return `<div class="modal"><div class="box"><h3>تم إنشاء الحساب ✅</h3>
+  <p class="lbl">احفظ البيانات وأرسلها للمستخدم، كلمة المرور لا تظهر مرة ثانية.</p><div class="link">${esc(S.cred)}</div>
+  <button class="btn" onclick="navigator.clipboard.writeText(S.cred);this.textContent='تم النسخ'">نسخ البيانات</button> <button class="btn alt" onclick="modal('acc')">رجوع</button></div></div>`;
+  if(m==="new")return projForm({status:"plan",progress:0});
+  if(m==="edit")return projForm(S.projects.find(x=>x.id===S.cur));
+  if(NEWM[m])return NEWM[m]();
+  const pass=[...crypto.getRandomValues(new Uint8Array(8))].map(x=>"abcdefghjkmnpqrstuvwxyz23456789"[x%31]).join("");
+  return `<div class="modal"><div class="box"><h3>الحسابات</h3>
+  <p class="lbl">الموظف يدير المشاريع المسندة له فقط، والعميل يشاهد مشروعه فقط. اربطهم بالمشروع من «تعديل المشروع».</p>
+  <select id="ar"><option value="engineer">مهندس</option><option value="employee">موظف</option><option value="client">عميل</option></select>
+  <input id="an" placeholder="الاسم الظاهر"><input id="au" dir="ltr" autocapitalize="none" placeholder="اسم المستخدم (إنجليزي)">
+  <input id="ap" dir="ltr" value="${pass}"><button class="btn" id="ab" onclick="mkAccount()">إنشاء الحساب</button> <button class="btn alt" onclick="modal(null)">إغلاق</button>
+  <h3 style="margin-top:18px">الحسابات الحالية (${S.members.length})</h3>
+  ${S.members.map(x=>`<div class="item"><b>${esc(x.name)}</b> · ${ROLES[x.role]} · <span dir="ltr">${esc(x.username)}</span> <button class="sm del" onclick="delMember('${x.id}')">حذف الحساب</button></div>`).join("")||'<div class="empty">لا يوجد</div>'}</div></div>`;
+}
+async function mkAccount(){
+  const role=$("ar").value,nm=$("an").value.trim(),user=$("au").value.trim().toLowerCase().replace(/[^a-z0-9._-]/g,""),pass=$("ap").value;
+  if(!nm||user.length<3)return alert("اكتب الاسم واسم مستخدم إنجليزي 3 أحرف على الأقل");
+  if(pass.length<6)return alert("كلمة المرور 6 أحرف على الأقل");
+  $("ab").disabled=true;$("ab").textContent="جاري الإنشاء...";
+  const fail=m=>{alert(m);$("ab").disabled=false;$("ab").textContent="إنشاء الحساب"};
+  const {data,error}=await sb2.auth.signUp({email:user+"@"+UD,password:pass});
+  if(error)return fail(/already|registered/i.test(error.message)?"اسم المستخدم مستخدم، اختر غيره":error.message);
+  const {error:e2}=await sb.rpc("create_member",{uid:data.user.id,new_role:role,nm,un:user});
+  sb2.auth.signOut().catch(()=>{});
+  if(e2)return fail(e2.message);
+  await loadMembers();
+  S.cred=`الموقع: ${location.origin+location.pathname}\nالدور: ${ROLES[role]}\nاسم المستخدم: ${user}\nكلمة المرور: ${pass}`;render();
+}
+async function delMember(id){
+  const m=S.members.find(x=>x.id===id);
+  if(!confirm("حذف حساب «"+(m?.name||"")+"» نهائياً؟"))return;
+  const {error}=await sb.rpc("delete_member",{uid:id});
+  if(error)return alert(error.message);
+  await loadMembers();await load();modal("acc");
+}
+function openImg(u){
+  const d=document.createElement("div");d.className="lb";d.id="lb";d.onclick=closeImg;
+  const i=document.createElement("img");i.src=u;const x=document.createElement("button");x.className="lbx";x.textContent="✕";
+  d.append(i,x);document.body.appendChild(d);
+}
+function closeImg(){$("lb")?.remove()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeImg()});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+/* ===== من نحن / حجز خدمة / الورش / جدول الأعمال ===== */
+Object.assign(S,{ws:[],pw:[],works:[],reqs:[],about:"",newReq:0,th:{}});
+const SV=[{n:"تصميم",u:"م²",ph:"المساحة بالمتر المربع"},{n:"تنفيذ",f:1,h:"ادخل الملف المطلوب تنفيذه وسيتم إرسال السعر في أقرب وقت"},
+{n:"إشراف",u:"م³",ph:"الحجم بالمتر المكعب"},{n:"تأثيث",u:"م²",ph:"المساحة بالمتر المربع"},{n:"استشارة ميدانية"},{n:"هوية بصرية كاملة"},
+{n:"تطوير المشاريع",f:1,h:"ارفع المشروع أو المنتج وسيتم التواصل معكم من فريقنا المختص"},{n:"تسعير المشاريع"},{n:"تسويق"}];
+const mclose='<button class="btn alt" onclick="modal(null)">إغلاق</button>';
+function wa(p){let d=String(p||"").replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="966"+d.slice(1);else if(d.length===9&&d[0]==="5")d="966"+d;return "https://wa.me/"+d}
+const stTxt=s=>s==="done"?"تمت المعالجة":"قيد المراجعة";
+function navHtml(){
+  if(S.role==="none")return"";
+  const L=[["about","من نحن"]];
+  if(S.role==="client")L.push(["book","حجز خدمة"]);
+  if(adm())L.push(["reqs","طلبات الخدمات"+(S.newReq?` (${S.newReq})`:"")],["ws","الورش"],["works","جدول الأعمال"],["gal","معرض المشاريع"],["acc","الحسابات"]);
+  if(adm())L.push(["rep","تقارير الشهر"]);
+  if(S.vapid&&!S.pushOn)L.push(["push","🔔 تفعيل الإشعارات"]);
+  return `<div class="tabs" style="margin:0 0 14px">${L.map(x=>`<div class="tab" onclick="nav('${x[0]}')">${x[1]}</div>`).join("")}</div>`;
+}
+async function loadAbout(){const {data}=await sb.from("settings").select("value").eq("key","about").maybeSingle();S.about=data?.value||""}
+async function loadWs(){const {data}=await sb.from("workshops").select("*").order("created_at");S.ws=data||[]}
+async function cntReq(){const {count}=await sb.from("service_requests").select("id",{count:"exact",head:true}).eq("status","new");S.newReq=count||0}
+async function loadPW(){S.pw=[];if(adm()&&S.cur){const {data}=await sb.from("project_workshops").select("workshop_id").eq("project_id",S.cur);S.pw=(data||[]).map(x=>x.workshop_id)}}
+async function nav(m){
+  if(m==="push")return enablePush();
+  if(m==="rep")return openRep("all");
+  S.modal=m;S.cred=null;
+  if(m==="ws")await loadWs();
+  if(m==="reqs"&&adm()){const {data:n}=await sb.from("notify_settings").select("value").eq("key","notify_to").maybeSingle();S.notifyTo=n?.value||""}
+  if(m==="gal")await loadGal();
+  if(m==="works"){const {data}=await sb.from("works").select("*").order("created_at");S.works=data||[]}
+  if(m==="reqs"||m==="book"){
+    const {data}=await sb.from("service_requests").select("*").order("created_at",{ascending:false});
+    S.reqs=data||[];await sign(S.reqs.map(r=>r.file_path),"requests");if(adm())S.newReq=S.reqs.filter(r=>r.status==="new").length;
+  }
+  render();
+}
+/* من نحن */
+function aboutHtml(){
+  const t=S.about||"";
+  return `<div class="modal"><div class="box"><img class="loginlg" src="logo.png" alt="بيوت" style="height:90px"><h3 style="text-align:center">من نحن</h3>
+  ${adm()?`<textarea id="ab" rows="9" placeholder="اكتب نبذة عن الشركة وخدماتها وطرق التواصل...">${esc(t||DEFAULT_ABOUT)}</textarea><button class="btn" onclick="saveAbout()">حفظ</button> `:`<div style="white-space:pre-wrap;line-height:1.9">${esc(t||DEFAULT_ABOUT)}</div>`}
+  ${mclose}</div></div>`;
+}
+async function saveAbout(){const v=$("ab").value;const {error}=await sb.from("settings").upsert({key:"about",value:v});if(error)return alert(error.message);S.about=v;alert("تم الحفظ ✅")}
+/* حجز خدمة (العميل) */
+function bookFields(i){const s=SV[i];return(s.h?`<p class="lbl">${s.h}</p>`:"")+(s.u?`<input id="bq" type="number" min="0" step="any" inputmode="decimal" placeholder="${s.ph} (${s.u})">`:"")+(s.f?'<input id="bfl" type="file">':"")}
+function bookHtml(){
+  return `<div class="modal"><div class="box"><h3>حجز خدمة</h3>
+  <select id="bs" onchange="$('bf').innerHTML=bookFields(this.value)">${SV.map((s,i)=>`<option value="${i}">${s.n}</option>`).join("")}</select>
+  <div id="bf">${bookFields(0)}</div>
+  <textarea id="bn" rows="3" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+  <input id="bp" type="tel" dir="ltr" inputmode="tel" placeholder="رقم الجوال للتواصل">
+  <button class="btn" id="bb" onclick="sendReq()">إرسال الطلب</button> ${mclose}
+  <h3 style="margin-top:18px">طلباتي (${S.reqs.length})</h3>
+  ${S.reqs.map(r=>`<div class="item"><b>${esc(r.service)}</b>${r.qty?` · ${r.qty} ${esc(r.unit)}`:""} · ${stTxt(r.status)}<small>${new Date(r.created_at).toLocaleDateString("ar")}</small></div>`).join("")||'<div class="empty">لا توجد طلبات</div>'}</div></div>`;
+}
+async function sendReq(){
+  const s=SV[$("bs").value],q=$("bq")?.value,ph=$("bp").value.trim(),f=$("bfl")?.files[0];
+  if(s.u&&!(Number(q)>0))return alert("اكتب القيمة المطلوبة");
+  if(s.f&&!f)return alert("ارفع الملف المطلوب");if(f&&f.size>MAXB)return alert("حجم الملف أكبر من 5GB");
+  if(ph.replace(/\D/g,"").length<8)return alert("اكتب رقم جوال صحيح للتواصل");
+  const b=$("bb"),reset=()=>{b.disabled=false;b.textContent="إرسال الطلب"};
+  b.disabled=true;b.textContent="جاري الإرسال...";
+  let fp=null;
+  if(f){
+    const ext=(f.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"")||"bin";fp=`${S.user.id}/${crypto.randomUUID()}.${ext}`;
+    try{
+      if(f.size>6*1048576)await tusUp("requests",fp,f,pc=>{b.textContent=`جاري رفع الملف (${pc}%)`});
+      else{const r=await sb.storage.from("requests").upload(fp,f,{contentType:f.type||"application/octet-stream"});if(r.error)throw r.error}
+    }catch(e){reset();return alert("فشل رفع الملف: "+(e.message||e))}
+  }
+  const {error}=await sb.from("service_requests").insert({service:s.n,qty:s.u?Number(q):null,unit:s.u||null,notes:$("bn").value.trim()||null,phone:ph,file_path:fp,client_name:S.name});
+  if(error){reset();return alert(error.message)}
+  alert("تم إرسال طلبك ✅ سنتواصل معك قريباً");await nav("book");
+}
+/* طلبات الخدمات (المدير) */
+function reqsHtml(){
+  return `<div class="modal"><div class="box"><h3>طلبات الخدمات (${S.reqs.length})</h3>${mclose}
+  <label class="lbl">بريد تنبيهات الطلبات الجديدة (افصل بين أكثر من بريد بفاصلة)</label>
+  <input id="nt" type="text" dir="ltr" inputmode="email" autocapitalize="none" placeholder="name@example.com" value="${esc(S.notifyTo)}">
+  <button class="btn" onclick="saveNotify()">حفظ البريد</button>
+  ${S.reqs.map(r=>`<div class="item"><b>${esc(r.service)}</b>${r.qty?` · ${r.qty} ${esc(r.unit)}`:""}<br>العميل: ${esc(r.client_name)} · <a dir="ltr" href="${wa(r.phone)}" target="_blank" rel="noopener">${esc(r.phone)}</a>
+  ${r.notes?`<div>${esc(r.notes)}</div>`:""}${r.file_path&&S.urls[r.file_path]?`<div><a href="${S.urls[r.file_path]}" target="_blank" rel="noopener">📎 فتح الملف</a></div>`:""}
+  <small>${new Date(r.created_at).toLocaleString("ar")} · ${r.status==="done"?"تمت المعالجة":"جديد"}</small>
+  <button class="sm" onclick="setReq('${r.id}','${r.status==="done"?"new":"done"}')">${r.status==="done"?"إعادة فتح":"تمت المعالجة"}</button> <button class="sm del" onclick="delReq('${r.id}')">حذف</button></div>`).join("")||'<div class="empty">لا توجد طلبات</div>'}</div></div>`;
+}
+async function saveNotify(){
+  const v=$("nt").value.split(",").map(x=>x.trim()).filter(Boolean);
+  if(v.some(x=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)))return alert("اكتب بريداً صحيحاً، وافصل بين أكثر من بريد بفاصلة");
+  const {error}=await sb.from("notify_settings").upsert({key:"notify_to",value:v.join(",")});
+  if(error)return alert("تعذر الحفظ: "+error.message);
+  S.notifyTo=v.join(",");alert("تم حفظ بريد التنبيهات ✅");
+}
+async function setReq(id,st){const {error}=await sb.from("service_requests").update({status:st}).eq("id",id);if(error)alert(error.message);await nav("reqs")}
+async function delReq(id){
+  if(!confirm("حذف الطلب؟"))return;
+  const r=S.reqs.find(x=>x.id===id);if(r?.file_path)await sb.storage.from("requests").remove([r.file_path]);
+  await sb.from("service_requests").delete().eq("id",id);await nav("reqs");
+}
+/* الورش (المدير فقط) */
+function wsHtml(){
+  return `<div class="modal"><div class="box"><h3>الورش (${S.ws.length}) · للمدير فقط</h3>
+  <input id="wn" placeholder="اسم الورشة"><input id="wp" type="tel" dir="ltr" placeholder="رقم واتساب الورشة"><input id="wt" placeholder="التخصص (اختياري)">
+  <button class="btn" onclick="addWs()">إضافة ورشة</button> ${mclose}
+  ${S.ws.map(w=>`<div class="item"><b>${esc(w.name)}</b>${w.note?" · "+esc(w.note):""}<br>${w.phone?`<a dir="ltr" href="${wa(w.phone)}" target="_blank" rel="noopener">واتساب ${esc(w.phone)}</a>`:""} <button class="sm del" onclick="delWs('${w.id}')">حذف</button></div>`).join("")||'<div class="empty">لا توجد ورش</div>'}</div></div>`;
+}
+async function addWs(){
+  const name=$("wn").value.trim();if(!name)return alert("اكتب اسم الورشة");
+  const {error}=await sb.from("workshops").insert({name,phone:$("wp").value.trim()||null,note:$("wt").value.trim()||null});
+  if(error)return alert(error.message);await nav("ws");
+}
+async function delWs(id){if(!confirm("حذف الورشة؟ ستُزال من المشاريع المسندة لها."))return;await sb.from("workshops").delete().eq("id",id);await nav("ws")}
+function pwBox(){
+  const mine=S.ws.filter(w=>S.pw.includes(w.id)),rest=S.ws.filter(w=>!S.pw.includes(w.id));
+  return `<div class="box" style="margin-top:14px"><b>الورش المسؤولة عن المشروع (تظهر للمدير فقط)</b>
+  ${mine.map(w=>`<div class="item"><b>${esc(w.name)}</b>${w.note?" · "+esc(w.note):""} ${w.phone?`<a href="${wa(w.phone)}" target="_blank" rel="noopener">واتساب</a>`:""} <button class="sm del" onclick="rmPW('${w.id}')">إزالة</button></div>`).join("")||'<div class="empty">لم تُسند ورشة بعد</div>'}
+  ${rest.length?`<select id="pws"><option value="">— اختر ورشة —</option>${rest.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join("")}</select><button class="btn" onclick="addPW()">إسناد ورشة</button>`:'<p class="lbl">أضف ورشاً من زر «الورش» أعلى الصفحة</p>'}</div>`;
+}
+async function addPW(){const w=$("pws").value;if(!w)return;const {error}=await sb.from("project_workshops").insert({project_id:S.cur,workshop_id:w});if(error)return alert(error.message);await loadPW();render()}
+async function rmPW(w){await sb.from("project_workshops").delete().eq("project_id",S.cur).eq("workshop_id",w);await loadPW();render()}
+/* جدول الأعمال (المدير فقط) */
+function worksHtml(){
+  return `<div class="modal"><div class="box"><h3>جدول الأعمال</h3>
+  <input id="kt" placeholder="العمل"><input id="kp" type="tel" dir="ltr" placeholder="رقم التواصل">
+  <button class="btn" onclick="addWork()">إضافة</button> ${mclose}
+  <div style="overflow-x:auto"><table class="tb"><tr><th>العمل</th><th>رقم التواصل</th><th></th></tr>
+  ${S.works.map(w=>`<tr><td>${esc(w.title)}</td><td dir="ltr">${w.phone?`<a href="tel:${w.phone.replace(/[^\d+]/g,"")}">${esc(w.phone)}</a>`:"-"}</td><td>${w.phone?`<a href="${wa(w.phone)}" target="_blank" rel="noopener">واتساب</a> `:""}<button class="sm del" onclick="delWork('${w.id}')">حذف</button></td></tr>`).join("")||'<tr><td colspan="3" class="empty">لا توجد أعمال</td></tr>'}</table></div></div></div>`;
+}
+async function addWork(){
+  const title=$("kt").value.trim();if(!title)return alert("اكتب العمل");
+  const {error}=await sb.from("works").insert({title,phone:$("kp").value.trim()||null});
+  if(error)return alert(error.message);await nav("works");
+}
+async function delWork(id){if(!confirm("حذف؟"))return;await sb.from("works").delete().eq("id",id);await nav("works")}
+/* ===== معرض المشاريع (يظهر للزوار في الصفحة الرئيسية) ===== */
+async function loadGal(){
+  const {data}=await sb.from("showcase").select("*").order("created_at",{ascending:false});
+  S.gal=data||[];await sign(S.gal.map(g=>g.file_path),"showcase");
+}
+function shrink(f,max=1600){
+  return new Promise((res,rej)=>{
+    const img=new Image(),u=URL.createObjectURL(f);
+    img.onload=()=>{
+      const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");
+      c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);
+      c.toBlob(b=>b?res(b):rej(new Error("تعذر معالجة الصورة")),"image/jpeg",0.82);
+    };
+    img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("تعذر قراءة الصورة"))};
+    img.src=u;
+  });
+}
+const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+/* يحوّل ملف PDF إلى نسخة عرض مسطّحة (صور للصفحات بجودة متوسطة) فلا يُرفع الأصل ولا نصوصه */
+async function flattenPdf(f,onp){
+  await loadLib(PDFJS+"pdf.min.js");await loadLib("jspdf.umd.min.js");
+  pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js";
+  const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+  const n=Math.min(pdf.numPages,40);
+  if(pdf.numPages>40&&!confirm(`الملف ${pdf.numPages} صفحة، سيُرفع أول 40 صفحة فقط. متابعة؟`))throw new Error("أُلغي الرفع");
+  const {jsPDF}=window.jspdf;let doc=null;
+  for(let i=1;i<=n;i++){
+    onp&&onp(i+"/"+n);
+    const pg=await pdf.getPage(i),v0=pg.getViewport({scale:1}),v=pg.getViewport({scale:Math.min(2,1400/v0.width)});
+    const c=document.createElement("canvas");c.width=Math.round(v.width);c.height=Math.round(v.height);
+    const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);
+    await pg.render({canvasContext:x,viewport:v}).promise;
+    const o=v0.width>v0.height?"l":"p";
+    if(!doc)doc=new jsPDF({orientation:o,unit:"pt",format:[v0.width,v0.height],compress:true});else doc.addPage([v0.width,v0.height],o);
+    doc.addImage(c.toDataURL("image/jpeg",0.8),"JPEG",0,0,v0.width,v0.height);
+  }
+  return doc.output("blob");
+}
+function galHtml(){
+  return `<div class="modal"><div class="box"><h3>معرض المشاريع</h3>
+  <p class="lbl">ارفع ملف التصميم بصيغة PDF (أو صورة). يظهر للزوار في نافذة «مشاريعنا»، ويُرفع كنسخة عرض مسطّحة بجودة متوسطة، فلا يُرفع الأصل ولا نصوصه.</p>
+  <input id="gt" placeholder="اسم المشروع"><input id="gn" placeholder="وصف مختصر (اختياري)">
+  <input id="gf" type="file" accept="application/pdf,image/*">
+  <button class="btn" id="gb" onclick="addGal()">رفع</button> ${mclose}
+  ${(S.gal||[]).map(g=>`<div class="item"><div style="display:flex;gap:10px;align-items:center">${/\.pdf$/i.test(g.file_path)?'<div style="width:64px;height:64px;border-radius:8px;background:#ddd;display:flex;align-items:center;justify-content:center;font-weight:700;color:#545454">PDF</div>':`<img src="${S.urls[g.file_path]||""}" style="width:64px;height:64px;object-fit:cover;border-radius:8px">`}<div><b>${esc(g.title)}</b><br><small>${esc(g.note)}</small></div></div><button class="sm del" onclick="delGal('${g.id}','${esc(g.file_path)}')">حذف</button></div>`).join("")||'<div class="empty">لا توجد مشاريع</div>'}
+  </div></div>`;
+}
+async function addGal(){
+  const t=$("gt").value.trim(),f=$("gf").files[0];
+  if(!t)return alert("اكتب اسم المشروع");
+  if(!f)return alert("اختر ملف التصميم");
+  const isPdf=f.type==="application/pdf"||/\.pdf$/i.test(f.name);
+  if(!isPdf&&!/^image\//.test(f.type))return alert("الملف لازم يكون PDF أو صورة.");
+  const b=$("gb");b.disabled=true;b.textContent="جاري المعالجة...";
+  const path=crypto.randomUUID()+(isPdf?".pdf":".jpg");
+  try{
+    const blob=isPdf?await flattenPdf(f,p=>b.textContent="جاري المعالجة "+p):await shrink(f);
+    b.textContent="جاري الرفع...";
+    if(blob.size>6*1048576)await tusUp("showcase",path,blob,p=>b.textContent="جاري الرفع "+p+"%");
+    else{const r=await sb.storage.from("showcase").upload(path,blob,{contentType:isPdf?"application/pdf":"image/jpeg"});if(r.error)throw r.error}
+  }catch(e){b.disabled=false;b.textContent="رفع";return alert("فشل الرفع: "+(e.message||e))}
+  const {error}=await sb.from("showcase").insert({title:t,note:$("gn").value.trim()||null,file_path:path});
+  if(error){await sb.storage.from("showcase").remove([path]);b.disabled=false;b.textContent="رفع";return alert(error.message)}
+  await nav("gal");
+}
+async function delGal(id,path){
+  if(!confirm("حذف؟"))return;
+  await sb.storage.from("showcase").remove([path]);await sb.from("showcase").delete().eq("id",id);await nav("gal");
+}
+/* ===== تحديثات مباشرة (Realtime) ===== */
+function toast(m){const d=document.createElement("div");d.textContent=m;d.style.cssText="position:fixed;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#44474a;color:#fff;padding:12px 20px;border-radius:12px;z-index:99;box-shadow:0 6px 20px #0006;max-width:90%;text-align:center";document.body.appendChild(d);setTimeout(()=>d.remove(),5000)}
+function startLive(){
+  S.rt=sb.channel("live")
+   .on("postgres_changes",{event:"INSERT",schema:"public",table:"service_requests"},p=>{if(!adm())return;S.newReq++;toast("🔔 طلب خدمة جديد: "+p.new.service);if(S.modal==="reqs")nav("reqs");else if(!document.activeElement?.closest?.(".modal"))render()})
+   .on("postgres_changes",{event:"INSERT",schema:"public",table:"entries"},async p=>{
+     const e=p.new;if(e.author_id===S.user.id)return;
+     if(S.cur&&e.project_id===S.cur&&e.kind===S.tab&&!S.modal&&!$("tx")?.value){await loadE();render()}
+     else toast("🆕 تحديث جديد في: "+(S.projects.find(x=>x.id===e.project_id)?.name||"مشروع"))})
+   .subscribe();
+}
+/* ===== إشعارات الجوال (Web Push) ===== */
+const pushOK=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+const b64u=s=>Uint8Array.from(atob((s+"=".repeat((4-s.length%4)%4)).replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+async function initPush(){
+  try{
+    const {data}=await sb.from("settings").select("value").eq("key","vapid_public").maybeSingle();S.vapid=data?.value||"";
+    if(S.vapid&&pushOK()&&Notification.permission==="granted"){const reg=await navigator.serviceWorker.ready;S.pushOn=!!(await reg.pushManager.getSubscription())}
+  }catch(e){}
+}
+async function enablePush(){
+  if(!pushOK())return alert(/iphone|ipad|ipod/i.test(navigator.userAgent)?"على الآيفون: ثبّت الموقع أولاً من زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من الأيقونة وفعّل الإشعارات.":"هذا المتصفح لا يدعم الإشعارات");
+  if(await Notification.requestPermission()!=="granted")return alert("لم يتم السماح بالإشعارات. فعّلها من إعدادات المتصفح للموقع.");
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const sub=(await reg.pushManager.getSubscription())||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(S.vapid)});
+    const j=sub.toJSON();
+    const {error}=await sb.from("push_subscriptions").upsert({user_id:S.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:"endpoint"});
+    if(error)throw error;
+    S.pushOn=true;toast("تم تفعيل الإشعارات ✅");render();
+  }catch(e){alert("تعذر تفعيل الإشعارات: "+(e.message||e))}
+}
+/* ===== التقرير الشهري PDF ===== */
+const MN=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const loadLib=src=>new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("تعذر تحميل "+src));document.head.appendChild(s)});
+function openRep(sc){S.repScope=sc;S.modal="rep";S.cred=null;render()}
+function repHtml(){
+  const now=new Date(),opts=[];
+  for(let i=0;i<6;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);opts.push(`<option value="${d.getFullYear()}-${d.getMonth()}">${MN[d.getMonth()]} ${d.getFullYear()}</option>`)}
+  const one=S.repScope==="one",p=S.projects.find(x=>x.id===S.cur);
+  return `<div class="modal"><div class="box"><h3>التقرير الشهري (PDF)</h3>
+  <p class="lbl">${one?"المشروع: "+esc(p?.name):`كل المشاريع قيد التنفيذ (${S.projects.filter(x=>x.status==="run").length}) — يُتخطّى المشروع الذي له تقرير لنفس الشهر`}</p>
+  <select id="rm">${opts.join("")}</select>
+  <p class="lbl">يُضاف التقرير إلى «التقارير والملفات» ويصل العميل والفريق إشعاراً.</p>
+  <button class="btn" id="rb" onclick="runReports()">إنشاء</button> ${mclose}</div></div>`;
+}
+async function runReports(){
+  const [y,m]=$("rm").value.split("-").map(Number),b=$("rb");
+  const list=S.repScope==="one"?S.projects.filter(x=>x.id===S.cur):S.projects.filter(x=>x.status==="run");
+  if(!list.length)return alert("لا توجد مشاريع");
+  b.disabled=true;let ok=0,skip=0;
+  try{
+    b.textContent="جاري تحميل المكتبات...";
+    await loadLib("html2canvas.min.js");await loadLib("jspdf.umd.min.js");
+    const title=`التقرير الشهري — ${MN[m]} ${y}`;
+    for(let i=0;i<list.length;i++){
+      const p=list[i];b.textContent=`جاري إنشاء تقرير ${i+1} من ${list.length}...`;
+      if(S.repScope==="all"){const {data}=await sb.from("entries").select("id").eq("project_id",p.id).eq("kind","reports").like("body",title+"%").limit(1);if(data?.length){skip++;continue}}
+      const blob=await buildPdf(p,y,m),path=await up(p.id,new File([blob],"report.pdf",{type:"application/pdf"}));
+      if(!path)continue;
+      const {error}=await sb.from("entries").insert({project_id:p.id,kind:"reports",body:`${title} — ${p.name}`,file_path:path,file_type:"application/pdf",author_name:"التقرير الشهري",client_visible:true});
+      if(error){alert(error.message);continue}ok++;
+    }
+  }catch(e){alert("تعذر إنشاء التقرير: "+(e.message||e))}
+  alert(`تم إنشاء ${ok} تقرير`+(skip?` وتخطي ${skip} (موجود مسبقاً)`:""));
+  S.modal=null;if(S.cur)await loadE();render();
+}
+async function buildPdf(p,y,m){
+  const st=new Date(y,m,1).toISOString(),en=new Date(y,m+1,1).toISOString();
+  const {data}=await sb.from("entries").select("*").eq("project_id",p.id).in("kind",["updates","reports"]).gte("created_at",st).lt("created_at",en).order("created_at");
+  const L=data||[],ups=L.filter(x=>x.kind==="updates"),imgs=L.filter(x=>x.file_path&&(x.file_type||"").startsWith("image")).slice(0,6);
+  let urls=[];if(imgs.length){const r=await sb.storage.from("media").createSignedUrls(imgs.map(x=>x.file_path),600);urls=(r.data||[]).map(x=>x.signedUrl).filter(Boolean)}
+  const t=timing(p),el=document.createElement("div");
+  el.style.cssText="position:fixed;left:-9999px;top:0;width:794px;background:#fff;color:#2b2d2f;padding:44px;box-sizing:border-box;direction:rtl;font-family:Tajawal,Tahoma,sans-serif;line-height:1.8";
+  const row=(a,v)=>`<tr><td style="padding:6px 10px;border:1px solid #ddd;background:#f4f4f4;width:30%">${a}</td><td style="padding:6px 10px;border:1px solid #ddd">${v}</td></tr>`;
+  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #545454;padding-bottom:12px;margin-bottom:18px"><div><div style="font-size:26px;font-weight:700">التقرير الشهري</div><div style="color:#6f7377">${MN[m]} ${y}</div></div><img src="logo.png" style="height:70px"></div>
+  <h2 style="margin:0 0 10px">${esc(p.name)}${p.loc?" — "+esc(p.loc):""}</h2>
+  <div style="background:#e6e6e6;border-radius:8px;height:16px;overflow:hidden"><div style="width:${clamp(p.progress)}%;height:100%;background:#55595e"></div></div>
+  <div style="margin:6px 0 16px">نسبة الإنجاز: <b>${clamp(p.progress)}%</b></div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:18px">${row("الحالة",ST[p.status][0])}${row("المهندس / المسؤول",esc(p.employee_name)||"-")}${row("تاريخ البداية",esc(p.start_date)||"-")}${row("تاريخ التسليم",esc(p.due)||"-")}${t?row("الموقف الزمني",t.t):""}</table>
+  <h3>أعمال الشهر (${ups.length})</h3>
+  ${ups.slice(0,20).map(x=>`<div style="border-bottom:1px solid #e2e2e2;padding:6px 0"><small style="color:#6f7377">${new Date(x.created_at).toLocaleDateString("ar")}</small><div>${esc(x.body)}</div></div>`).join("")||'<div style="color:#6f7377">لا توجد تحديثات مسجلة هذا الشهر.</div>'}
+  ${urls.length?`<h3 style="margin-top:18px">صور من الموقع</h3><div style="display:flex;flex-wrap:wrap;gap:8px">${urls.map(u=>`<img crossorigin="anonymous" src="${u}" style="width:236px;height:170px;object-fit:cover;border-radius:6px">`).join("")}</div>`:""}
+  <div style="margin-top:24px;color:#6f7377;font-size:13px;border-top:1px solid #ddd;padding-top:8px">أُنشئ بتاريخ ${new Date().toLocaleDateString("ar")} — بيوت</div>`;
+  document.body.appendChild(el);
+  try{
+    await Promise.all([...el.querySelectorAll("img")].map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r;setTimeout(r,8000)})));
+    const cv=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:"#fff"});
+    const doc=new window.jspdf.jsPDF("p","pt","a4"),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),ph=Math.floor(cv.width*H/W);
+    for(let y0=0,pg=0;y0<cv.height;y0+=ph,pg++){
+      const c=document.createElement("canvas");c.width=cv.width;c.height=Math.min(ph,cv.height-y0);
+      c.getContext("2d").drawImage(cv,0,y0,cv.width,c.height,0,0,cv.width,c.height);
+      if(pg)doc.addPage();doc.addImage(c.toDataURL("image/jpeg",.92),"JPEG",0,0,W,c.height*W/cv.width);
+    }
+    return doc.output("blob");
+  }finally{el.remove()}
+}
+const NEWM={gal:galHtml,rep:repHtml,about:aboutHtml,book:bookHtml,reqs:reqsHtml,ws:wsHtml,works:worksHtml};
+/* شريط تثبيت التطبيق: أندرويد (زر تثبيت) وآيفون (تعليمات) */
+let DP=null;const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+function installBar(msg,btn=""){
+  if(standalone||$("ib"))return;
+  try{if(localStorage.getItem("ib0"))return}catch(e){}
+  const d=document.createElement("div");d.id="ib";
+  d.style.cssText="position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:12px;right:12px;z-index:50;background:#545454;color:#fff;padding:12px 14px;border-radius:14px;display:flex;gap:10px;align-items:center;font-size:14px;box-shadow:0 6px 20px #0006";
+  d.innerHTML=`<span style="flex:1">${msg}</span>${btn}<button onclick="closeIb()" style="background:none;border:0;color:#fff;font-size:22px;cursor:pointer;min-width:36px">✕</button>`;
+  document.body.appendChild(d);
+}
+function closeIb(){$("ib")?.remove();try{localStorage.setItem("ib0","1")}catch(e){}}
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();DP=e;installBar("ثبّت التطبيق على جوالك","<button class='btn' onclick='DP.prompt();closeIb()'>تثبيت</button>")});
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))
+  installBar("للتثبيت: اضغط زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية»");
+init();
+</script>
+</body>
+</html>
