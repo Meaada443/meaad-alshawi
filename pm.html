@@ -60,6 +60,7 @@ header h1{margin:0;font-size:19px}.hb{display:flex;gap:8px;align-items:center}.r
 .item{border-bottom:1px solid var(--line);padding:12px 0}.item small{color:var(--muted);display:block;margin-top:6px}
 .item img,.item video{width:100%;max-height:420px;object-fit:cover;border-radius:12px;margin-top:8px}
 .item img{cursor:zoom-in}
+.vis{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px;color:var(--muted)}.vis input{width:auto;margin:0}.vtag{display:inline-block;margin-top:8px;font-size:13px;padding:2px 10px;border-radius:20px;background:#eee;color:var(--muted)}.vtag.on{background:#e3f1e4;color:#2e7d32}
 .lb{position:fixed;inset:0;background:#000d;z-index:99;display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
 .lb img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
 .lbx{position:absolute;top:14px;left:14px;background:#ffffff33;color:#fff;border:0;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer}
@@ -257,9 +258,11 @@ function proj(){
     <div><span>تاريخ التسليم</span><b>${esc(p.due)||"-"}</b></div>
     ${!["employee","engineer"].includes(S.role)?`<div><span>السعر</span><b>${money(p.price)}</b></div>`:""}</div>`;
   const acts=canEdit()?`<div class="acts"><button class="btn" onclick="modal('edit')">تعديل المشروع</button><button class="btn alt" onclick="openRep('one')">📄 التقرير الشهري</button>${adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div>`:"";
-  const items=S.entries.map(e=>`<div class="item"><div>${esc(e.body)}</div>${fileHtml(e)}<small>${esc(e.author_name)} · ${new Date(e.created_at).toLocaleDateString("ar")}</small>
+  const canVis=["admin","employee"].includes(S.role);
+  const visUi=e=>S.tab!=="reports"||S.role==="client"?"":canVis?`<label class="vis"><input type="checkbox" ${e.client_visible?"checked":""} onchange="setVis('${e.id}',this.checked)"> إظهار للعميل</label>`:`<span class="vtag ${e.client_visible?"on":""}">${e.client_visible?"ظاهر للعميل":"غير ظاهر للعميل"}</span>`;
+  const items=S.entries.map(e=>`<div class="item"><div>${esc(e.body)}</div>${fileHtml(e)}${visUi(e)}<small>${esc(e.author_name)} · ${new Date(e.created_at).toLocaleDateString("ar")}</small>
   ${adm()?`<button class="sm del" onclick="delE('${e.id}')">حذف</button>`:""}</div>`).join("");
-  const add=has(t.add)?`<textarea id="tx" rows="3" placeholder="${t.ph}"></textarea>${t.file?`<input id="fl" type="file" accept="${t.file}" ${t.multi?"multiple":""}>`:""}<button class="btn" id="bt" onclick="addE()">إضافة</button>`:"";
+  const add=has(t.add)?`<textarea id="tx" rows="3" placeholder="${t.ph}"></textarea>${t.file?`<input id="fl" type="file" accept="${t.file}" ${t.multi?"multiple":""}>`:""}${t.k==="reports"&&canVis?'<label class="vis"><input type="checkbox" id="cv"> إظهار للعميل</label>':""}<button class="btn" id="bt" onclick="addE()">إضافة</button>`:"";
   return `${S.solo?"":'<button class="back" onclick="S.cur=null;render()">← كل المشاريع</button>'}
   <div class="banner ${ST[p.status][1]}" ${u?`style="background-image:url('${u}')"`:""}>${chip(p)}</div>
   <div class="top" style="margin-top:16px"><h2>${esc(p.name)}${p.loc?" · "+esc(p.loc):""}</h2></div>
@@ -300,7 +303,7 @@ async function addE(){
   const body=$("tx").value.trim(),fs=[...($("fl")?.files||[])];
   if(!body&&!fs.length)return;
   $("bt").disabled=true;
-  const base={project_id:S.cur,kind:S.tab,author_name:(S.name||"")+" · "+ROLES[S.role]},rows=[];
+  const base={project_id:S.cur,kind:S.tab,author_name:(S.name||"")+" · "+ROLES[S.role],client_visible:S.tab==="reports"?!!$("cv")?.checked:true},rows=[];
   if(!fs.length)rows.push({...base,body,file_path:null,file_type:null});
   for(let i=0;i<fs.length;i++){
     $("bt").textContent=`جاري رفع ${i+1} من ${fs.length}...`;
@@ -317,6 +320,12 @@ async function delE(id){
   const e=S.entries.find(x=>x.id===id);
   if(e?.file_path)await sb.storage.from("media").remove([e.file_path]);
   await sb.from("entries").delete().eq("id",id);await loadE();render();
+}
+
+async function setVis(id,v){
+  const {error}=await sb.from("entries").update({client_visible:v}).eq("id",id);
+  if(error){alert(error.message);await loadE();render();return}
+  const e=S.entries.find(x=>x.id===id);if(e)e.client_visible=v;
 }
 
 /* ===== النوافذ والحسابات ===== */
@@ -646,7 +655,7 @@ async function runReports(){
       if(S.repScope==="all"){const {data}=await sb.from("entries").select("id").eq("project_id",p.id).eq("kind","reports").like("body",title+"%").limit(1);if(data?.length){skip++;continue}}
       const blob=await buildPdf(p,y,m),path=await up(p.id,new File([blob],"report.pdf",{type:"application/pdf"}));
       if(!path)continue;
-      const {error}=await sb.from("entries").insert({project_id:p.id,kind:"reports",body:`${title} — ${p.name}`,file_path:path,file_type:"application/pdf",author_name:"التقرير الشهري"});
+      const {error}=await sb.from("entries").insert({project_id:p.id,kind:"reports",body:`${title} — ${p.name}`,file_path:path,file_type:"application/pdf",author_name:"التقرير الشهري",client_visible:true});
       if(error){alert(error.message);continue}ok++;
     }
   }catch(e){alert("تعذر إنشاء التقرير: "+(e.message||e))}
