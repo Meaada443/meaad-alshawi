@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>بيوت</title>
+<title></title>
 <meta name="theme-color" content="#545454">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -13,11 +13,11 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Tajawal,Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
 a{color:inherit;text-decoration:none}
-.hero{background:#707070 url(bg.jpg) center 88%/cover;color:#fff;text-align:center;padding:44px 20px 96px}
+.hero{background:linear-gradient(to bottom,#7070700d 55%,#707070f2 100%),var(--hero-img,url(bg-plans.svg)) center 30%/cover #707070;color:#fff;text-align:center;min-height:64vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:40px 20px 30px}
 .hero img{height:96px}
 .hero h1{margin:14px 0 4px;font-size:30px;font-weight:800}
 .hero p{margin:0;opacity:.85}
-.tiles{max-width:960px;margin:-52px auto 0;padding:0 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tiles{max-width:960px;margin:24px auto 0;padding:0 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 12px;text-align:center;box-shadow:0 4px 14px #0002;transition:.2s}
 .tile:hover{transform:translateY(-3px);border-color:var(--navy)}
 .tile svg{width:40px;height:40px;stroke:var(--navy);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -49,6 +49,14 @@ a{color:inherit;text-decoration:none}
 #lbp{width:100%;max-width:900px;max-height:100%;overflow:auto}
 #lbp canvas{cursor:default;margin:0 0 10px;width:100%}
 #lbx{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;z-index:21;background:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer}
+.svc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.svc button{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 8px;font:inherit;font-weight:700;color:var(--text);cursor:pointer;transition:.15s}
+.svc button:hover{border-color:var(--navy)}
+.svc button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#bform{display:none}#bform.show{display:block}
+#bform input,#bform textarea{display:block;width:100%;padding:11px 12px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+#bform .lbl{margin:0 0 10px;color:var(--muted);font-size:14px}
+#bform .btn{border:0;cursor:pointer;font:inherit;font-weight:700;margin:0}
 .empty{color:var(--muted);padding:20px;text-align:center;grid-column:1/-1}
 @media print{#projects,#lb{display:none!important}}
 footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
@@ -57,9 +65,9 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
 </head>
 <body>
 <header class="hero">
-  <a href="#" title="الرئيسية" style="display:inline-block;line-height:0"><img src="logo-white.png" alt="MEAAD.A.alshawi"></a>
-  <h1>MEAAD.A.ALSHAWI</h1>
-  <p>اختر ما تحتاجه للبدء</p>
+  <a href="#" title="الرئيسية" style="display:inline-block;line-height:0"><img id="hlogo" src="logo-white.png" alt=""></a>
+  <h1 id="htitle" dir="ltr" style="letter-spacing:2px">MEAAD.A.ALSHAWI</h1>
+  <p id="hsub">اختر ما تحتاجه للبدء</p>
 </header>
 
 <main>
@@ -92,6 +100,22 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
   </div>
 </section>
 
+<section class="panel" id="book" hidden>
+  <a class="back" href="#">← الرئيسية</a>
+  <h2>اختر خدمة</h2>
+  <div class="svc" id="svc"></div>
+  <div class="box" id="bform">
+    <h3 id="bt" style="margin:0 0 10px"></h3>
+    <div id="bextra"></div>
+    <input id="bname" placeholder="الاسم" autocomplete="name">
+    <input id="bphone" type="tel" dir="ltr" inputmode="tel" placeholder="رقم الجوال للتواصل" autocomplete="tel">
+    <textarea id="bnotes" rows="3" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+    <div class="msg" id="bmsg"></div>
+    <button class="btn" id="bsend" type="button">إرسال الطلب</button>
+    <div id="bok" hidden style="margin-top:14px"></div>
+  </div>
+</section>
+
 <section class="panel" id="about" hidden>
   <a class="back" href="#">← الرئيسية</a>
   <h2>من نحن</h2>
@@ -108,7 +132,7 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
   <a class="back" href="#">← الرئيسية</a>
   <h2>شركاؤنا</h2>
   <!-- بدّل كل مربع بشعار الشريك: <img src="partner1.png" alt="اسم الشريك" style="max-height:60px;max-width:80%"> -->
-  <div class="grid">
+  <div class="grid" id="pgrid2">
     <div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div>
     <div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div>
   </div>
@@ -120,10 +144,10 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
   <div class="box">
     <p style="margin-top:0">نسعد بخدمتك، تواصل معنا بالطريقة الأنسب:</p>
     <!-- غيّر الرقم والبريد قبل الرفع -->
-    <a class="btn" href="https://wa.me/966500000000" target="_blank" rel="noopener">واتساب</a>
-    <a class="btn" href="tel:+966500000000">اتصال</a>
-    <a class="btn" href="mailto:support@example.com">البريد الإلكتروني</a>
-    <p style="margin-bottom:0;color:var(--muted)">أوقات الدعم: من الأحد إلى الخميس، 8 ص – 5 م</p>
+    <a class="btn" id="sup-wa" href="https://wa.me/966537723373" target="_blank" rel="noopener">واتساب</a>
+    <a class="btn" id="sup-tel" href="tel:+966537723373">اتصال</a>
+    <a class="btn" id="sup-mail" href="mailto:me3adalshawi@hotmail.com">البريد الإلكتروني</a>
+    <p id="sup-hours" style="margin-bottom:0;color:var(--muted)">أوقات الدعم: من الأحد إلى الخميس، 8 ص – 5 م</p>
   </div>
 </section>
 </main>
@@ -139,7 +163,7 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
 const EYE='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYEOFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.5 6.9C3.7 8.6 2 12 2 12s3.5 7 10 7c1.6 0 3-.4 4.3-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 const SBU="https://nhtrghkgmxysesdoysix.supabase.co",SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5odHJnaGtnbXh5c2VzZG95c2l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5OTYzMTcsImV4cCI6MjEwNzU3MjMxN30.Y3Shg8quSz-kXjfQh4fbluWO7rRBJmgjr5IuwQIWgCM",UD="app.example.com";
-const P=["about","projects","partners","support","pm"],$=id=>document.getElementById(id);
+const P=["about","projects","partners","support","pm","book"],$=id=>document.getElementById(id);
 let sb=null,hasSession=false;
 try{sb=supabase.createClient(SBU,SBK)}catch(e){}
 /* نص "من نحن": هذا النص هو الافتراضي. وإن حُفظ نص آخر من النظام (إدارة المشاريع ← من نحن ← حفظ) فإنه يحلّ محله */
@@ -235,8 +259,8 @@ document.addEventListener("visibilitychange",()=>cvHide(document.hidden));
 $("lb").onclick=e=>{if(e.target.id==="lb"||e.target.id==="lbx"){lbTok++;$("lb").hidden=true}};
 const msg=t=>$("cmsg").textContent=t;
 function show(){
-  const h=location.hash.slice(1),p=h==="book"?"pm":h,pan=P.includes(p);
-  if((h==="pm"||h==="book")&&hasSession){location.href="pm.html"+(h==="book"?"#book":"");return}
+  const h=location.hash.slice(1),p=h,pan=P.includes(p);
+  if(h==="pm"&&hasSession){location.href="pm.html";return}
   P.forEach(x=>$(x).hidden=x!==p);
   $("tiles").hidden=pan;
   if(p==="projects"&&!projLoaded){projLoaded=true;loadProjects()}
@@ -270,6 +294,101 @@ if(sb)sb.auth.getSession().then(({data})=>{
   if(hasSession){$("cform").hidden=true;$("cin").hidden=false;show()}
 });
 if(sb)loadAbout();else $("abouttxt").textContent=FALLBACK_ABOUT;
+/* ===== اختر خدمة: بدون تسجيل دخول، والطلب يُرسل إلى واتساب ===== */
+const NOTIFY_EMAIL="me3adalshawi@hotmail.com"; /* ← ضع إيميلك هنا: يصلك عليه تنبيه عند كل طلب */
+let WA_NUMBER="966537723373"; /* ← غيّره إلى رقم واتساب الخاص بك بصيغة دولية بدون + (مثال السعودية: 9665XXXXXXXX) */
+const SV=[{n:"تصميم",u:"م²",ph:"المساحة بالمتر المربع"},{n:"تنفيذ",f:1,h:"سيتم إرسال السعر في أقرب وقت. بعد فتح واتساب أرسل لنا الملف المطلوب تنفيذه في نفس المحادثة."},
+{n:"إشراف",u:"م³",ph:"الحجم بالمتر المكعب"},{n:"تأثيث",u:"م²",ph:"المساحة بالمتر المربع"},{n:"استشارة ميدانية"},{n:"هوية بصرية كاملة"},
+{n:"تطوير المشاريع",f:1,h:"بعد فتح واتساب أرسل لنا المشروع أو المنتج في نفس المحادثة وسيتواصل معكم فريقنا المختص."},{n:"تسعير المشاريع"},{n:"تسويق"}];
+let svI=-1;
+function pickSv(i){
+  svI=i;const s=SV[i];
+  document.querySelectorAll("#svc button").forEach((b,k)=>b.classList.toggle("on",k===i));
+  $("bt").textContent=s.n;$("bmsg").textContent="";
+  const ex=$("bextra");ex.innerHTML="";
+  if(s.h){const p=document.createElement("p");p.className="lbl";p.textContent=s.h;ex.append(p)}
+  if(s.u){const q=document.createElement("input");q.id="bq";q.type="number";q.min="0";q.step="any";q.inputMode="decimal";q.placeholder=s.ph+" ("+s.u+")";ex.append(q)}
+  $("bform").classList.add("show");$("bform").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+(function(){
+  const g=$("svc");
+  SV.forEach((s,i)=>{const b=document.createElement("button");b.type="button";b.textContent=s.n;b.onclick=()=>pickSv(i);g.append(b)});
+  $("bsend").onclick=async()=>{
+    const bm=t=>$("bmsg").textContent=t;
+    if(svI<0)return bm("اختر خدمة أولاً");
+    const s=SV[svI],q=$("bq")?$("bq").value:"",nm=$("bname").value.trim(),ph=$("bphone").value.trim(),nt=$("bnotes").value.trim();
+    if(!nm)return bm("اكتب اسمك");
+    if(ph.replace(/\D/g,"").length<8)return bm("اكتب رقم جوال صحيح للتواصل");
+    if(s.u&&!(Number(q)>0))return bm("اكتب "+s.ph);
+    let t="طلب خدمة جديد 🔔\nالخدمة: "+s.n+"\n";
+    if(s.u)t+=s.ph+": "+q+" "+s.u+"\n";
+    t+="الاسم: "+nm+"\nالجوال: "+ph;
+    if(nt)t+="\nالتفاصيل: "+nt;
+    if(s.f)t+="\n(سأرفق الملف هنا في المحادثة)";
+    bm("");
+    const wl=document.createElement("a");wl.className="btn";wl.target="_blank";wl.rel="noopener";wl.style.margin="0";
+    wl.href="https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(t);
+    const ok=$("bok"),bt=$("bsend");
+    bt.disabled=true;bt.textContent="جاري الإرسال...";
+    let sent=false;
+    try{
+      const r=await fetch("https://formsubmit.co/ajax/"+NOTIFY_EMAIL,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},
+        body:JSON.stringify({_subject:"طلب خدمة جديد: "+s.n,_template:"table",_captcha:"false",الخدمة:s.n,[s.u?s.ph:"الكمية"]:s.u?(q+" "+s.u):"-",الاسم:nm,الجوال:ph,التفاصيل:nt||"-"})});
+      const j=await r.json().catch(()=>({}));
+      sent=r.ok&&(j.success===true||j.success==="true");
+    }catch(e){}
+    bt.disabled=false;bt.textContent="إرسال الطلب";
+    ok.hidden=false;ok.innerHTML="";
+    const m=document.createElement("p");m.style.margin="0 0 10px";
+    if(sent){
+      m.style.color="#2e7d32";m.textContent="تم إرسال طلبك ✅ سنتواصل معك قريباً."+(s.f?" ولإرسال الملف المطلوب تابع عبر واتساب:":"");
+      ok.append(m);if(s.f){wl.textContent="إرسال الملف عبر واتساب";ok.append(wl)}
+    }else{
+      m.style.color="#b3473f";m.textContent="تعذر الإرسال تلقائياً، أرسل طلبك عبر واتساب:";
+      wl.textContent="إرسال عبر واتساب";ok.append(m,wl);
+    }
+  };
+})();
+/* ===== تخصيص الواجهة من لوحة الإدارة (إدارة المشاريع ← تخصيص الواجهة) ===== */
+const SITE_KEY="site_cfg";
+const normPhone=p=>{let d=String(p||"").replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="966"+d.slice(1);else if(d.length===9&&d[0]==="5")d="966"+d;return d};
+function applySite(c){
+  if(!c||typeof c!=="object")return;
+  const r=document.documentElement;
+  if(c.color&&/^#[0-9a-f]{6}$/i.test(c.color))r.style.setProperty("--navy",c.color);
+  if(c.bg&&/^https:\/\//.test(c.bg))r.style.setProperty("--hero-img",'url("'+encodeURI(c.bg)+'")');
+  if(c.logo&&/^https:\/\//.test(c.logo))$("hlogo").src=c.logo;
+  if(c.title)$("htitle").textContent=c.title;
+  if(typeof c.sub==="string")$("hsub").textContent=c.sub;
+  if(c.tiles)for(const k in c.tiles){
+    const a=document.querySelector('.tile[href="#'+k+'"]');if(!a)continue;
+    const t=c.tiles[k]||{};
+    if(t.show===false)a.style.display="none";else a.style.display="";
+    if(t.label)a.querySelector("b").textContent=t.label;
+  }
+  if(c.support){
+    const s=c.support,n=normPhone(s.wa);
+    if(n){$("sup-wa").href="https://wa.me/"+n;WA_NUMBER=n}
+    const tl=normPhone(s.tel);if(tl)$("sup-tel").href="tel:+"+tl;
+    if(s.mail&&/^[^\s@]+@[^\s@]+$/.test(s.mail))$("sup-mail").href="mailto:"+s.mail;
+    if(s.hours)$("sup-hours").textContent=s.hours;
+  }
+  if(Array.isArray(c.partners)){
+    const g=$("pgrid2");g.innerHTML="";
+    c.partners.filter(u=>/^https:\/\//.test(u)).forEach(u=>{const d=document.createElement("div");d.className="logo-ph";const i=document.createElement("img");i.src=u;i.alt="";i.style.cssText="max-height:60px;max-width:80%";d.append(i);g.append(d)});
+    if(!g.children.length)g.innerHTML='<div class="empty">سيتم إضافة شركائنا قريبًا.</div>';
+  }
+}
+try{const t=localStorage.getItem(SITE_KEY);if(t)applySite(JSON.parse(t))}catch(e){}
+(async()=>{
+  if(!sb)return;
+  try{
+    const {data}=await sb.from("settings").select("value").eq("key","site").maybeSingle();
+    if(!data||!data.value)return;
+    applySite(JSON.parse(data.value));
+    try{localStorage.setItem(SITE_KEY,data.value)}catch(e){}
+  }catch(e){}
+})();
 addEventListener("hashchange",show);show();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
