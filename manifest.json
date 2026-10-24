@@ -3,7 +3,7 @@
   "short_name": "بيوت",
   "lang": "ar",
   "dir": "rtl",
-   "index.html",
+     "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f4f4",
