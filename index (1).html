@@ -108,7 +108,7 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
     <h3 id="bt" style="margin:0 0 10px"></h3>
     <div id="bextra"></div>
     <input id="bname" placeholder="الاسم" autocomplete="name">
-    <input id="bphone" type="tel" dir="ltr" inputmode="tel" placeholder="رقم الجوال للتواصل" autocomplete="tel">
+    <input id="bphone" type="tel" dir="ltr" inputmode="tel" placeholder="966537723373" autocomplete="tel">
     <textarea id="bnotes" rows="3" placeholder="تفاصيل إضافية (اختياري)"></textarea>
     <div class="msg" id="bmsg"></div>
     <button class="btn" id="bsend" type="button">إرسال الطلب</button>
@@ -144,9 +144,9 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
   <div class="box">
     <p style="margin-top:0">نسعد بخدمتك، تواصل معنا بالطريقة الأنسب:</p>
     <!-- غيّر الرقم والبريد قبل الرفع -->
-    <a class="btn" href="https://wa.me/966500000000" target="_blank" rel="noopener">واتساب</a>
-    <a class="btn" href="tel:+966500000000">اتصال</a>
-    <a class="btn" href="mailto:support@example.com">البريد الإلكتروني</a>
+    <a class="btn" href="https://wa.me/966537723373" target="_blank" rel="noopener">واتساب</a>
+    <a class="btn" href="tel:+966537723373">اتصال</a>
+    <a class="btn" href="mailto:"me3adalshawi@hotmail.com";</a>
     <p style="margin-bottom:0;color:var(--muted)">أوقات الدعم: من الأحد إلى الخميس، 8 ص – 5 م</p>
   </div>
 </section>
@@ -295,8 +295,8 @@ if(sb)sb.auth.getSession().then(({data})=>{
 });
 if(sb)loadAbout();else $("abouttxt").textContent=FALLBACK_ABOUT;
 /* ===== اختر خدمة: بدون تسجيل دخول، والطلب يُرسل إلى واتساب ===== */
-const NOTIFY_EMAIL="your@email.com"; /* ← ضع إيميلك هنا: يصلك عليه تنبيه عند كل طلب */
-const WA_NUMBER="966500000000"; /* ← غيّره إلى رقم واتساب الخاص بك بصيغة دولية بدون + (مثال السعودية: 9665XXXXXXXX) */
+const NOTIFY_EMAIL="me3adalshawi@hotmail.com"; /* ← ضع إيميلك هنا: يصلك عليه تنبيه عند كل طلب */
+const WA_NUMBER="966537723373"; /* ← غيّره إلى رقم واتساب الخاص بك بصيغة دولية بدون + (مثال السعودية: 9665XXXXXXXX) */
 const SV=[{n:"تصميم",u:"م²",ph:"المساحة بالمتر المربع"},{n:"تنفيذ",f:1,h:"سيتم إرسال السعر في أقرب وقت. بعد فتح واتساب أرسل لنا الملف المطلوب تنفيذه في نفس المحادثة."},
 {n:"إشراف",u:"م³",ph:"الحجم بالمتر المكعب"},{n:"تأثيث",u:"م²",ph:"المساحة بالمتر المربع"},{n:"استشارة ميدانية"},{n:"هوية بصرية كاملة"},
 {n:"تطوير المشاريع",f:1,h:"بعد فتح واتساب أرسل لنا المشروع أو المنتج في نفس المحادثة وسيتواصل معكم فريقنا المختص."},{n:"تسعير المشاريع"},{n:"تسويق"}];
