@@ -13,11 +13,11 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Tajawal,Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
 a{color:inherit;text-decoration:none}
-.hero{background:#707070 url(bg.jpg) center 88%/cover;color:#fff;text-align:center;padding:44px 20px 96px}
+.hero{background:linear-gradient(to bottom,#7070700d 55%,#707070f2 100%),var(--hero-img,url(bg-plans.svg)) center 30%/cover #707070;color:#fff;text-align:center;min-height:64vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:40px 20px 30px}
 .hero img{height:96px}
 .hero h1{margin:14px 0 4px;font-size:30px;font-weight:800}
 .hero p{margin:0;opacity:.85}
-.tiles{max-width:960px;margin:-52px auto 0;padding:0 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tiles{max-width:960px;margin:24px auto 0;padding:0 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 12px;text-align:center;box-shadow:0 4px 14px #0002;transition:.2s}
 .tile:hover{transform:translateY(-3px);border-color:var(--navy)}
 .tile svg{width:40px;height:40px;stroke:var(--navy);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -57,6 +57,7 @@ a{color:inherit;text-decoration:none}
 #bform input,#bform textarea{display:block;width:100%;padding:11px 12px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
 #bform .lbl{margin:0 0 10px;color:var(--muted);font-size:14px}
 #bform .btn{border:0;cursor:pointer;font:inherit;font-weight:700;margin:0}
+.hands{position:relative;width:100%;max-width:760px;margin:6px auto 0;aspect-ratio:960/1112}.hands .hb{position:absolute;inset:0;width:100%;height:100%}.hl{position:absolute;left:19%;right:19%;top:22%;bottom:24%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:2%}.hl span{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}.hl img{max-width:96%;max-height:96%;object-fit:contain}
 .empty{color:var(--muted);padding:20px;text-align:center;grid-column:1/-1}
 @media print{#projects,#lb{display:none!important}}
 footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
@@ -65,9 +66,9 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
 </head>
 <body>
 <header class="hero">
-  <a href="#" title="الرئيسية" style="display:inline-block;line-height:0"><img src="logo-white.png" alt="بيوت"></a>
-  <h1 dir="ltr" style="letter-spacing:2px">MEAAD.A.ALSHAWI</h1>
-  <p>اختر ما تحتاجه للبدء</p>
+  <a href="#" title="الرئيسية" style="display:inline-block;line-height:0"><img id="hlogo" src="logo-white.png" alt=""></a>
+  <h1 id="htitle" dir="ltr" style="letter-spacing:2px">MEAAD.A.ALSHAWI</h1>
+  <p id="hsub">اختر ما تحتاجه للبدء</p>
 </header>
 
 <main>
@@ -83,8 +84,8 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
 <section class="panel" id="pm" hidden>
   <a class="back" href="#">← الرئيسية</a>
   <div class="box login">
-    <h2 style="margin:0 0 4px">دخول العملاء</h2>
-    <p style="margin:0 0 14px;color:var(--muted)">لمتابعة مشاريعك وحجز الخدمات</p>
+    <h2 style="margin:0 0 4px">تسجيل الدخول</h2>
+    <p style="margin:0 0 14px;color:var(--muted)">للعملاء وفريق العمل</p>
     <div id="cform">
       <input id="cu" placeholder="اسم المستخدم" autocapitalize="none" dir="ltr" autocomplete="username">
       <div class="pw"><input id="cp" type="password" placeholder="كلمة المرور" autocomplete="current-password"><button type="button" class="eye" id="ceye" aria-label="إظهار كلمة المرور"></button></div>
@@ -131,11 +132,8 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
 <section class="panel" id="partners" hidden>
   <a class="back" href="#">← الرئيسية</a>
   <h2>شركاؤنا</h2>
-  <!-- بدّل كل مربع بشعار الشريك: <img src="partner1.png" alt="اسم الشريك" style="max-height:60px;max-width:80%"> -->
-  <div class="grid">
-    <div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div>
-    <div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div>
-  </div>
+  <div class="hands"><img class="hb" src="ptn-hands.svg" alt=""><div class="hl"><span><img src="ptn-moh.png" alt=""></span><span><img src="ptn-emblem.png" alt=""></span><span><img src="ptn-kiwan.png" alt=""></span><span><img src="ptn-luckystone.png" alt=""></span><span><img src="ptn-samar.png" alt=""></span><span><img src="ptn-fundocake.png" alt=""></span><span><img src="ptn-macrohub.png" alt=""></span><span><img src="ptn-bettyclean.png" alt=""></span><span><img src="ptn-orso.png" alt=""></span><span><img src="ptn-stonenails.png" alt=""></span><span><img src="ptn-pattern.png" alt=""></span><span><img src="ptn-coffee.png" alt=""></span></div></div>
+  <div class="grid" id="pgrid2" hidden></div>
 </section>
 
 <section class="panel" id="support" hidden>
@@ -144,10 +142,10 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
   <div class="box">
     <p style="margin-top:0">نسعد بخدمتك، تواصل معنا بالطريقة الأنسب:</p>
     <!-- غيّر الرقم والبريد قبل الرفع -->
-    <a class="btn" href="https://wa.me/966537723373" target="_blank" rel="noopener">واتساب</a>
-    <a class="btn" href="tel:+966537723373">اتصال</a>
-    <a class="btn" href="mailto:me3adalshawi@hotmail.com">البريد الإلكتروني</a>
-    <p style="margin-bottom:0;color:var(--muted)">أوقات الدعم: من الأحد إلى الخميس، 8 ص – 5 م</p>
+    <a class="btn" id="sup-wa" href="https://wa.me/966537723373" target="_blank" rel="noopener">واتساب</a>
+    <a class="btn" id="sup-tel" href="tel:+966537723373">اتصال</a>
+    <a class="btn" id="sup-mail" href="mailto:me3adalshawi@hotmail.com">البريد الإلكتروني</a>
+    <p id="sup-hours" style="margin-bottom:0;color:var(--muted)">أوقات الدعم: من الأحد إلى الخميس، 8 ص – 5 م</p>
   </div>
 </section>
 </main>
@@ -274,9 +272,9 @@ async function clientLogin(){
   const {data,error}=await sb.auth.signInWithPassword({email:em,password:$("cp").value});
   if(error){$("cbtn").disabled=false;return msg("اسم المستخدم أو كلمة المرور غير صحيحة")}
   const {data:p}=await sb.from("profiles").select("role").eq("id",data.user.id).maybeSingle();
-  if(p?.role!=="client"){
+  if(!p?.role){
     await sb.auth.signOut();$("cbtn").disabled=false;
-    return msg("هذا الدخول خاص بالعملاء فقط.");
+    return msg("هذا الحساب غير مفعّل، تواصل مع الإدارة.");
   }
   try{
     if($("crem").checked)localStorage.removeItem("sb_temp");else localStorage.setItem("sb_temp","1");
@@ -296,7 +294,7 @@ if(sb)sb.auth.getSession().then(({data})=>{
 if(sb)loadAbout();else $("abouttxt").textContent=FALLBACK_ABOUT;
 /* ===== اختر خدمة: بدون تسجيل دخول، والطلب يُرسل إلى واتساب ===== */
 const NOTIFY_EMAIL="me3adalshawi@hotmail.com"; /* ← ضع إيميلك هنا: يصلك عليه تنبيه عند كل طلب */
-const WA_NUMBER="966537723373"; /* ← غيّره إلى رقم واتساب الخاص بك بصيغة دولية بدون + (مثال السعودية: 9665XXXXXXXX) */
+let WA_NUMBER="966537723373"; /* ← غيّره إلى رقم واتساب الخاص بك بصيغة دولية بدون + (مثال السعودية: 9665XXXXXXXX) */
 const SV=[{n:"تصميم",u:"م²",ph:"المساحة بالمتر المربع"},{n:"تنفيذ",f:1,h:"سيتم إرسال السعر في أقرب وقت. بعد فتح واتساب أرسل لنا الملف المطلوب تنفيذه في نفس المحادثة."},
 {n:"إشراف",u:"م³",ph:"الحجم بالمتر المكعب"},{n:"تأثيث",u:"م²",ph:"المساحة بالمتر المربع"},{n:"استشارة ميدانية"},{n:"هوية بصرية كاملة"},
 {n:"تطوير المشاريع",f:1,h:"بعد فتح واتساب أرسل لنا المشروع أو المنتج في نفس المحادثة وسيتواصل معكم فريقنا المختص."},{n:"تسعير المشاريع"},{n:"تسويق"}];
@@ -348,6 +346,46 @@ function pickSv(i){
       wl.textContent="إرسال عبر واتساب";ok.append(m,wl);
     }
   };
+})();
+/* ===== تخصيص الواجهة من لوحة الإدارة (إدارة المشاريع ← تخصيص الواجهة) ===== */
+const SITE_KEY="site_cfg";
+const normPhone=p=>{let d=String(p||"").replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="966"+d.slice(1);else if(d.length===9&&d[0]==="5")d="966"+d;return d};
+function applySite(c){
+  if(!c||typeof c!=="object")return;
+  const r=document.documentElement;
+  if(c.color&&/^#[0-9a-f]{6}$/i.test(c.color))r.style.setProperty("--navy",c.color);
+  if(c.bg&&/^https:\/\//.test(c.bg))r.style.setProperty("--hero-img",'url("'+encodeURI(c.bg)+'")');
+  if(c.logo&&/^https:\/\//.test(c.logo))$("hlogo").src=c.logo;
+  if(c.title)$("htitle").textContent=c.title;
+  if(typeof c.sub==="string")$("hsub").textContent=c.sub;
+  if(c.tiles)for(const k in c.tiles){
+    const a=document.querySelector('.tile[href="#'+k+'"]');if(!a)continue;
+    const t=c.tiles[k]||{};
+    if(t.show===false)a.style.display="none";else a.style.display="";
+    if(t.label)a.querySelector("b").textContent=t.label;
+  }
+  if(c.support){
+    const s=c.support,n=normPhone(s.wa);
+    if(n){$("sup-wa").href="https://wa.me/"+n;WA_NUMBER=n}
+    const tl=normPhone(s.tel);if(tl)$("sup-tel").href="tel:+"+tl;
+    if(s.mail&&/^[^\s@]+@[^\s@]+$/.test(s.mail))$("sup-mail").href="mailto:"+s.mail;
+    if(s.hours)$("sup-hours").textContent=s.hours;
+  }
+  if(Array.isArray(c.partners)){
+    const g=$("pgrid2");g.innerHTML="";
+    c.partners.filter(u=>/^https:\/\//.test(u)).forEach(u=>{const d=document.createElement("div");d.className="logo-ph";const i=document.createElement("img");i.src=u;i.alt="";i.style.cssText="max-height:60px;max-width:80%";d.append(i);g.append(d)});
+    g.hidden=!g.children.length;
+  }
+}
+try{const t=localStorage.getItem(SITE_KEY);if(t)applySite(JSON.parse(t))}catch(e){}
+(async()=>{
+  if(!sb)return;
+  try{
+    const {data}=await sb.from("settings").select("value").eq("key","site").maybeSingle();
+    if(!data||!data.value)return;
+    applySite(JSON.parse(data.value));
+    try{localStorage.setItem(SITE_KEY,data.value)}catch(e){}
+  }catch(e){}
 })();
 addEventListener("hashchange",show);show();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
