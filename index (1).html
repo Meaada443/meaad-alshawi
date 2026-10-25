@@ -57,6 +57,7 @@ a{color:inherit;text-decoration:none}
 #bform input,#bform textarea{display:block;width:100%;padding:11px 12px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
 #bform .lbl{margin:0 0 10px;color:var(--muted);font-size:14px}
 #bform .btn{border:0;cursor:pointer;font:inherit;font-weight:700;margin:0}
+.hands{position:relative;max-width:900px;margin:10px auto 0;aspect-ratio:960/1112}.hands img{position:absolute;transform:translate(-50%,-50%);height:auto}.hands img.hb{left:50%;top:50%;width:100%;height:100%;object-fit:contain}
 .empty{color:var(--muted);padding:20px;text-align:center;grid-column:1/-1}
 @media print{#projects,#lb{display:none!important}}
 footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
@@ -131,11 +132,8 @@ footer{text-align:center;color:var(--muted);padding:34px 0;font-size:14px}
 <section class="panel" id="partners" hidden>
   <a class="back" href="#">← الرئيسية</a>
   <h2>شركاؤنا</h2>
-  <!-- بدّل كل مربع بشعار الشريك: <img src="partner1.png" alt="اسم الشريك" style="max-height:60px;max-width:80%"> -->
-  <div class="grid" id="pgrid2">
-    <div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div>
-    <div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div><div class="logo-ph">شعار الشريك</div>
-  </div>
+  <div class="hands"><img class="hb" src="partners-hands.svg" alt=""><img src="p-coffee.png" alt="coffee" loading="lazy" style="left:31.94%;top:34.03%;width:11.26%"><img src="p-moh.png" alt="moh" loading="lazy" style="left:45.63%;top:35.83%;width:10.39%"><img src="p-kiwan.png" alt="kiwan" loading="lazy" style="left:63.01%;top:34.17%;width:8.03%"><img src="p-emblem.png" alt="emblem" loading="lazy" style="left:20.10%;top:42.21%;width:10.64%"><img src="p-pattern.png" alt="pattern" loading="lazy" style="left:34.13%;top:45.24%;width:9.86%"><img src="p-luckystone.png" alt="luckystone" loading="lazy" style="left:77.99%;top:43.80%;width:15.45%"><img src="p-fundocake.png" alt="fundocake" loading="lazy" style="left:62.44%;top:47.28%;width:11.89%"><img src="p-stonenails.png" alt="stonenails" loading="lazy" style="left:46.50%;top:52.83%;width:14.72%"><img src="p-samar.png" alt="samar" loading="lazy" style="left:24.36%;top:54.29%;width:15.32%"><img src="p-bettyclean.png" alt="bettyclean" loading="lazy" style="left:68.80%;top:57.83%;width:16.00%"><img src="p-macrohub.png" alt="macrohub" loading="lazy" style="left:42.92%;top:65.60%;width:12.34%"><img src="p-orso.png" alt="orso" loading="lazy" style="left:60.15%;top:68.36%;width:15.10%"></div>
+  <div class="grid" id="pgrid2" hidden></div>
 </section>
 
 <section class="panel" id="support" hidden>
@@ -376,7 +374,7 @@ function applySite(c){
   if(Array.isArray(c.partners)){
     const g=$("pgrid2");g.innerHTML="";
     c.partners.filter(u=>/^https:\/\//.test(u)).forEach(u=>{const d=document.createElement("div");d.className="logo-ph";const i=document.createElement("img");i.src=u;i.alt="";i.style.cssText="max-height:60px;max-width:80%";d.append(i);g.append(d)});
-    if(!g.children.length)g.innerHTML='<div class="empty">سيتم إضافة شركائنا قريبًا.</div>';
+    g.hidden=!g.children.length;
   }
 }
 try{const t=localStorage.getItem(SITE_KEY);if(t)applySite(JSON.parse(t))}catch(e){}
