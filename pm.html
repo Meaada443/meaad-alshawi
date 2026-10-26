@@ -266,7 +266,7 @@ function proj(){
     <div><span>تاريخ البداية</span><b>${esc(p.start_date)||"-"}</b></div>
     <div><span>تاريخ التسليم</span><b>${esc(p.due)||"-"}</b></div>
     ${!["employee","engineer"].includes(S.role)?`<div><span>السعر</span><b>${money(p.price)}</b></div>`:""}</div>`;
-  const acts=canEdit()?`<div class="acts"><button class="btn" onclick="modal('edit')">تعديل المشروع</button><button class="btn alt" onclick="openRep('one')">📄 التقرير الشهري</button>${adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div>`:"";
+  const acts=canEdit()?`<div class="acts">${adm()?'<button class="btn" onclick="modal(\'edit\')">تعديل المشروع</button>':""}<button class="btn alt" onclick="openRep('one')">📄 التقرير الشهري</button>${adm()?'<button class="btn danger" onclick="delProj()">حذف المشروع</button>':""}</div>`:"";
   const canVis=["admin","employee"].includes(S.role);
   const visUi=e=>S.tab!=="reports"||S.role==="client"?"":canVis?`<label class="vis"><input type="checkbox" ${e.client_visible?"checked":""} onchange="setVis('${e.id}',this.checked)"> إظهار للعميل</label>`:`<span class="vtag ${e.client_visible?"on":""}">${e.client_visible?"ظاهر للعميل":"غير ظاهر للعميل"}</span>`;
   const items=S.entries.map(e=>`<div class="item"><div>${esc(e.body)}</div>${fileHtml(e)}${visUi(e)}<small>${esc(e.author_name)} · ${new Date(e.created_at).toLocaleDateString("ar")}</small>
