@@ -120,7 +120,7 @@ const TABS=[
 {k:"updates",n:"التحديثات والصور",see:"admin,employee,engineer,client",add:"admin,employee,engineer",ph:"اكتب تحديثاً عن سير العمل...",file:"image/*,video/*",multi:1},
 {k:"reports",n:"التقارير والملفات",see:"admin,employee,engineer,client",add:"admin,employee,engineer",ph:"عنوان التقرير وملخصه...",file:"*/*"},
 {k:"messages",n:"المراسلات",see:"admin,employee,client",add:"admin,employee,client",ph:"اكتب رسالة..."},
-{k:"internal",n:"ملاحظات داخلية",see:"admin,employee,engineer",add:"admin,employee,engineer",ph:"ملاحظة داخلية (لا يراها العميل)..."}];
+{k:"internal",n:"مراسلات الموظفين",see:"admin,employee,engineer",add:"admin,employee,engineer",ph:"رسالة للموظفين (لا يراها العميل)..."}];
 let S={user:null,role:"none",name:"",job:"",staff:{},projects:[],members:[],cur:null,tab:"updates",entries:[],urls:{},modal:null,cred:null,solo:false};
 const has=(l,r=S.role)=>l.split(",").includes(r);
 const $=id=>document.getElementById(id);
